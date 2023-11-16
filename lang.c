@@ -179,8 +179,8 @@ struct cmd * TFor(struct cmd * init, struct expr * cond,
 struct cmd * TDoWhile(struct cmd * body, struct expr * cond) {
   struct cmd * res = new_cmd_ptr();
   res -> t = T_DO_WHILE;
-  res -> d.DO_WHILE.body = body;
   res -> d.DO_WHILE.cond = cond;
+  res -> d.DO_WHILE.body = body;
   return res;
 }
 
