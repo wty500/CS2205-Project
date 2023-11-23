@@ -21,8 +21,8 @@ void * none;
 }
 
 // Terminals
-%token <n> TM_NAT
-%token <i> TM_IDENT
+%token <n> TM_NAT   // 常数
+%token <i> TM_IDENT // 变量名
 %token <none> TM_LEFT_BRACE TM_RIGHT_BRACE
 %token <none> TM_LEFT_PAREN TM_RIGHT_PAREN
 %token <none> TM_SEMICOL TM_COMMA
@@ -41,6 +41,7 @@ void * none;
 // Nonterminals
 %type <gil> NT_WHOLE
 %type <c> NT_CMD
+%type <e> NT_P_IDENT // pointer to pointer to ... to ident
 %type <e> NT_EXPR0
 %type <e> NT_EXPR1
 %type <e> NT_EXPR
@@ -105,7 +106,7 @@ NT_EXPR_LIST:
 ;
 
 NT_GLOBAL_ITEM:
-  TM_VAR TM_IDENT
+  TM_VAR NT_P_IDENT
   {
     $$ = (TGlobVar($2));
   }
@@ -128,7 +129,7 @@ NT_GLOBAL_ITEM:
 ;
 
 NT_CMD:
-  TM_VAR TM_IDENT TM_SEMICOL NT_CMD
+  TM_VAR NT_P_IDENT TM_SEMICOL NT_CMD
   {
     $$ = (TDecl($2,$4));
   }
@@ -178,8 +179,17 @@ NT_CMD:
   }
 ;
 
+NT_P_IDENT:
+  TM_MUL NT_P_IDENT
+  {
+    $$ = (TPtr($2));
+  }
+| TM_IDENT
+  {
+    $$ = (TVar($1));
+  }
 
-NT_EXPR0:
+NT_EXPR0: // 原子表达式
   TM_NAT
   {
     $$ = (TConst($1));

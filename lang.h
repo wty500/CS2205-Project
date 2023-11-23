@@ -29,6 +29,7 @@ enum UnOpType {
 enum ExprType {
   T_CONST = 0,
   T_VAR,
+  T_PTR,
   T_BINOP,
   T_UNOP,
   T_DEREF,
@@ -68,6 +69,7 @@ struct expr {
   union {
     struct {unsigned int value; } CONST;
     struct {char * name; } VAR;
+    struct {struct expr * arg; } PTR;
     struct {enum BinOpType op; struct expr * left; struct expr * right; } BINOP;
     struct {enum UnOpType op; struct expr * arg; } UNOP;
     struct {struct expr * arg; } DEREF;
@@ -79,7 +81,7 @@ struct expr {
 struct cmd {
   enum CmdType t;
   union {
-    struct {char * name; struct cmd * body; } DECL;
+    struct {struct expr * name; struct cmd * body; } DECL;
     struct {struct expr * left; struct expr * right; } ASGN;
     struct {struct cmd * left; struct cmd * right; } SEQ;
     struct {struct expr * cond; struct cmd * left; struct cmd * right; } IF;
@@ -104,7 +106,7 @@ struct glob_item {
   union {
     struct {char * name; struct var_list * args; struct cmd * body; } FUNC_DEF;
     struct {char * name; struct var_list * args; struct cmd * body; } PROC_DEF;
-    struct {char * name;} GLOB_VAR;
+    struct {struct expr * name;} GLOB_VAR;
   } d;
 };
 
@@ -117,13 +119,14 @@ struct expr_list * TENil();
 struct expr_list * TECons(struct expr * data, struct expr_list * next);
 struct expr * TConst(unsigned int value);
 struct expr * TVar(char * name);
+struct expr * TPtr(struct expr * arg);
 struct expr * TBinOp(enum BinOpType op, struct expr * left,
                      struct expr * right);
 struct expr * TUnOp(enum UnOpType op, struct expr * arg);
 struct expr * TDeref(struct expr * arg);
 struct expr * TAddrOf(struct expr * arg);
 struct expr * TFunc(char * name, struct expr_list * args);
-struct cmd * TDecl(char * name, struct cmd * body);
+struct cmd * TDecl(struct expr * name, struct cmd * body);
 struct cmd * TAsgn(struct expr * left, struct expr * right);
 struct cmd * TSeq(struct cmd * left, struct cmd * right);
 struct cmd * TIf(struct expr * cond, struct cmd * left, struct cmd * right);
@@ -137,7 +140,7 @@ struct cmd * TContinue();
 struct cmd * TReturn();
 struct var_list * TVNil();
 struct var_list * TVCons(char * name, struct var_list * next);
-struct glob_item * TGlobVar(char * name);
+struct glob_item * TGlobVar(struct expr * name);
 struct glob_item * TFuncDef(char * name, struct var_list * args,
                             struct cmd * body);
 struct glob_item * TProcDef(char * name, struct var_list * args,

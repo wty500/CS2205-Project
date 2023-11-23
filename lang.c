@@ -85,6 +85,13 @@ struct expr * TVar(char * name) {
   return res;
 }
 
+struct expr * TPtr(struct expr * arg){
+  struct expr * res = new_expr_ptr();
+  res -> t = T_PTR;
+  res -> d.PTR.arg = arg;
+  return res;
+}
+
 struct expr * TBinOp(enum BinOpType op, struct expr * left, struct expr * right) {
   struct expr * res = new_expr_ptr();
   res -> t = T_BINOP;
@@ -124,7 +131,7 @@ struct expr * TFunc(char * name, struct expr_list * args) {
   return res;
 }
 
-struct cmd * TDecl(char * name, struct cmd * body) {
+struct cmd * TDecl(struct expr * name, struct cmd * body) {
   struct cmd * res = new_cmd_ptr();
   res -> t = T_DECL;
   res -> d.DECL.name = name;
@@ -241,7 +248,7 @@ struct glob_item * TProcDef(char * name, struct var_list * args,
   return res;
 }
 
-struct glob_item * TGlobVar(char * name) {
+struct glob_item * TGlobVar(struct expr * name) {
   struct glob_item * res = new_glob_item_ptr();
   res -> t = T_GLOB_VAR;
   res -> d.GLOB_VAR.name = name;
@@ -323,6 +330,11 @@ void print_expr(struct expr * e) {
   case T_VAR:
     printf("VAR(%s)", e -> d.VAR.name);
     break;
+  case T_PTR:
+    printf("PTR(");
+    print_expr(e -> d.PTR.arg);
+    printf(")");
+    break;
   case T_BINOP:
     print_binop(e -> d.BINOP.op);
     printf("(");
@@ -367,7 +379,9 @@ void print_expr_list(struct expr_list * es) {
 void print_cmd(struct cmd * c) {
   switch (c -> t) {
   case T_DECL:
-    printf("DECL(%s,", c -> d.DECL.name);
+    printf("DECL(");
+    print_expr(c -> d.DECL.name);
+    printf(",");
     print_cmd(c -> d.DECL.body);
     printf(")");
     break;
@@ -469,7 +483,9 @@ void print_glob_item(struct glob_item * g) {
     printf("\n\n");
     return;
   case T_GLOB_VAR:
-    printf("VAR %s\n\n", g -> d.GLOB_VAR.name);
+    printf("DEF_VAR ");
+    print_expr(g -> d.GLOB_VAR.name);
+    printf("\n\n");
     return;
   }
 }

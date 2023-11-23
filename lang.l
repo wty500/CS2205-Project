@@ -12,7 +12,7 @@
     return TM_NAT;
 }
 
-"int" {
+"var" {
     return TM_VAR;
 }
 
@@ -40,11 +40,11 @@
     return TM_FOR;
 }
 
-/* "func" {
+"func" {
     return TM_FUNC_DEF;
-} */
+}
 
-"void" {
+"proc" {
     return TM_PROC_DEF;
 }
 
