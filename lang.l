@@ -12,8 +12,8 @@
     return TM_NAT;
 }
 
-"var" {
-    return TM_VAR;
+"int" {
+    return TM_INT;
 }
 
 "if" {
@@ -44,7 +44,7 @@
     return TM_FUNC_DEF;
 }
 
-"proc" {
+"void" {
     return TM_PROC_DEF;
 }
 

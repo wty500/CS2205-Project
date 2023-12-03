@@ -3,6 +3,15 @@
 #include <string.h>
 #include "lang.h"
 
+struct type * new_type() {
+    struct type * res = (struct type *) malloc(sizeof(struct type));
+    if (res == NULL) {
+        printf("Failure in malloc.\n");
+        exit(0);
+    }
+    return res;
+}
+
 struct expr * new_expr_ptr() {
   struct expr * res = (struct expr *) malloc(sizeof(struct expr));
   if (res == NULL) {
@@ -58,6 +67,20 @@ struct glob_item_list * new_glob_item_list_ptr() {
     exit(0);
   }
   return res;
+}
+
+struct type * TPtr_int() {
+    struct type * res = new_type();
+    res -> t = T_PTR_INT;
+    res -> d.PTR_INT.num_of_ptr = 0;
+    return res;
+}
+
+struct type * TPtr_int_1(struct type * last) {
+    struct type * res = new_type();
+    res -> t = T_PTR_INT;
+    res -> d.PTR_INT.num_of_ptr = last -> d.PTR_INT.num_of_ptr + 1;
+    return res;
 }
 
 struct expr_list * TENil() {
@@ -221,16 +244,18 @@ struct var_list * TVNil() {
   return NULL;
 }
 
-struct var_list * TVCons(char * name, struct var_list * next) {
+struct var_list * TVCons(struct type * cur, char * name, struct var_list * next) {
   struct var_list * res = new_var_list_ptr();
+  res -> cur = cur;
   res -> name = name;
   res -> next = next;
   return res;
 }
 
-struct glob_item * TFuncDef(char * name, struct var_list * args,
+struct glob_item * TFuncDef(struct type * return_type, char * name, struct var_list * args,
                             struct cmd * body) {
   struct glob_item * res = new_glob_item_ptr();
+  res -> d.FUNC_DEF.return_type = return_type;
   res -> t = T_FUNC_DEF;
   res -> d.FUNC_DEF.name = name;
   res -> d.FUNC_DEF.args = args;
@@ -248,9 +273,10 @@ struct glob_item * TProcDef(char * name, struct var_list * args,
   return res;
 }
 
-struct glob_item * TGlobVar(struct expr * name) {
+struct glob_item * TGlobVar(struct type * var_type, char * name) {
   struct glob_item * res = new_glob_item_ptr();
   res -> t = T_GLOB_VAR;
+  res -> d.GLOB_VAR.var_type = var_type;
   res -> d.GLOB_VAR.name = name;
   return res;
 }
@@ -320,6 +346,20 @@ void print_unop(enum UnOpType op) {
     printf("NOT");
     break;
   }
+}
+
+void print_type(struct type * t) {
+    switch (t -> t) {
+        case T_PTR_INT:
+            for(int i = 0; i < t -> d.PTR_INT.num_of_ptr; i++){
+                printf("PTR(");
+            }
+            printf("INT");
+            for(int i = 0; i < t -> d.PTR_INT.num_of_ptr; i++){
+                printf(")");
+            }
+            break;
+    }
 }
 
 void print_expr(struct expr * e) {
@@ -454,7 +494,9 @@ void _print_var_list(struct var_list * vs) {
   if (vs == NULL) {
     return;
   }
-  printf(",%s", vs -> name);
+  printf(",");
+  print_type(vs -> cur);
+  printf(" %s", vs -> name);
   _print_var_list(vs -> next);
 }
 
@@ -462,14 +504,16 @@ void print_var_list(struct var_list * vs) {
   if (vs == NULL) {
     return;
   }
-  printf("%s", vs -> name);
+  print_type(vs -> cur);
+  printf(" %s", vs -> name);
   _print_var_list(vs -> next);
 }
 
 void print_glob_item(struct glob_item * g) {
   switch (g -> t) {
   case T_FUNC_DEF:
-    printf("FUNC %s(", g -> d.FUNC_DEF.name);
+      print_type(g -> d.FUNC_DEF.return_type);
+    printf(" %s(", g -> d.FUNC_DEF.name);
     print_var_list(g -> d.FUNC_DEF.args);
     printf(")\n  ");
     print_cmd(g -> d.FUNC_DEF.body);
@@ -483,8 +527,8 @@ void print_glob_item(struct glob_item * g) {
     printf("\n\n");
     return;
   case T_GLOB_VAR:
-    printf("DEF_VAR ");
-    print_expr(g -> d.GLOB_VAR.name);
+    print_type(g -> d.GLOB_VAR.var_type);
+    printf(" %s", g -> d.GLOB_VAR.name);
     printf("\n\n");
     return;
   }

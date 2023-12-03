@@ -12,6 +12,7 @@
 unsigned int n;
 char * i;
 struct expr * e;
+struct type * t;
 struct expr_list * el;
 struct var_list * vl;
 struct glob_item * gi;
@@ -28,7 +29,7 @@ void * none;
 %token <none> TM_SEMICOL TM_COMMA
 %token <none> TM_FUNC_DEF TM_PROC_DEF
 %token <none> TM_CONTINUE TM_BREAK TM_RETURN
-%token <none> TM_VAR TM_IF TM_THEN TM_ELSE TM_WHILE TM_DO TM_FOR
+%token <none> TM_INT TM_IF TM_THEN TM_ELSE TM_WHILE TM_DO TM_FOR
 %token <none> TM_ASGNOP
 %token <none> TM_OR
 %token <none> TM_AND
@@ -42,6 +43,7 @@ void * none;
 %type <gil> NT_WHOLE
 %type <c> NT_CMD
 %type <e> NT_P_IDENT // pointer to pointer to ... to ident
+%type <t> NT_TYPE1 // int, int*, int** ......
 %type <e> NT_EXPR0
 %type <e> NT_EXPR1
 %type <e> NT_EXPR
@@ -83,14 +85,25 @@ NT_GLOBAL_ITEM_LIST:
   }
 ;
 
-NT_VAR_LIST:
-  TM_IDENT TM_COMMA NT_VAR_LIST
+NT_TYPE1:
+  NT_TYPE1 TM_MUL
   {
-    $$ = (TVCons($1,$3));
+    $$ = (TPtr_int_1($1));
   }
-| TM_IDENT
+| TM_INT
   {
-    $$ = (TVCons($1,TVNil()));
+    $$ = (TPtr_int());
+  }
+;
+
+NT_VAR_LIST:
+  NT_TYPE1 TM_IDENT TM_COMMA NT_VAR_LIST
+  {
+    $$ = (TVCons($1,$2,$4));
+  }
+| NT_TYPE1 TM_IDENT
+  {
+    $$ = (TVCons($1,$2,TVNil()));
   }
 ;
 
@@ -106,17 +119,17 @@ NT_EXPR_LIST:
 ;
 
 NT_GLOBAL_ITEM:
-  TM_VAR NT_P_IDENT
+  NT_TYPE1 TM_IDENT
   {
-    $$ = (TGlobVar($2));
+    $$ = (TGlobVar($1,$2));
   }
-| TM_FUNC_DEF TM_IDENT TM_LEFT_PAREN TM_RIGHT_PAREN TM_LEFT_BRACE NT_CMD TM_RIGHT_BRACE
+| NT_TYPE1 TM_IDENT TM_LEFT_PAREN TM_RIGHT_PAREN TM_LEFT_BRACE NT_CMD TM_RIGHT_BRACE
   {
-    $$ = (TFuncDef($2,TVNil(),$6));
+    $$ = (TFuncDef($1,$2,TVNil(),$6));
   }
-| TM_FUNC_DEF TM_IDENT TM_LEFT_PAREN NT_VAR_LIST TM_RIGHT_PAREN TM_LEFT_BRACE NT_CMD TM_RIGHT_BRACE
+| NT_TYPE1 TM_IDENT TM_LEFT_PAREN NT_VAR_LIST TM_RIGHT_PAREN TM_LEFT_BRACE NT_CMD TM_RIGHT_BRACE
   {
-    $$ = (TFuncDef($2,$4,$7));
+    $$ = (TFuncDef($1,$2,$4,$7));
   }
 | TM_PROC_DEF TM_IDENT TM_LEFT_PAREN TM_RIGHT_PAREN TM_LEFT_BRACE NT_CMD TM_RIGHT_BRACE
   {
@@ -129,7 +142,7 @@ NT_GLOBAL_ITEM:
 ;
 
 NT_CMD:
-  TM_VAR NT_P_IDENT TM_SEMICOL NT_CMD
+  TM_INT NT_P_IDENT TM_SEMICOL NT_CMD
   {
     $$ = (TDecl($2,$4));
   }

@@ -1,6 +1,6 @@
-#line 2 "lexer.c"
+#line 1 "lexer.c"
 
-#line 4 "lexer.c"
+#line 3 "lexer.c"
 
 #define  YY_INT_ALIGNED short int
 
@@ -526,8 +526,8 @@ char *yytext;
 #line 4 "lang.l"
 #include "lang.h"
 #include "parser.h"
+#line 529 "lexer.c"
 #line 530 "lexer.c"
-#line 531 "lexer.c"
 
 #define INITIAL 0
 
@@ -538,7 +538,7 @@ char *yytext;
  */
 #include <unistd.h>
 #endif
-
+    
 #ifndef YY_EXTRA_TYPE
 #define YY_EXTRA_TYPE void *
 #endif
@@ -747,7 +747,7 @@ YY_DECL
 #line 8 "lang.l"
 
 
-#line 751 "lexer.c"
+#line 750 "lexer.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -826,7 +826,7 @@ case 2:
 YY_RULE_SETUP
 #line 15 "lang.l"
 {
-    return TM_VAR;
+    return TM_INT;
 }
 	YY_BREAK
 case 3:
@@ -1085,7 +1085,7 @@ YY_RULE_SETUP
 #line 159 "lang.l"
 ECHO;
 	YY_BREAK
-#line 1089 "lexer.c"
+#line 1088 "lexer.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 

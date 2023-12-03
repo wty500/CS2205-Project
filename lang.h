@@ -57,6 +57,19 @@ enum GlobItemType {
   T_GLOB_VAR
 };
 
+enum TypeType {
+    T_PTR_INT
+};
+
+struct type;
+
+struct type {
+    enum TypeType t;
+    union {
+      struct {unsigned int num_of_ptr; } PTR_INT;
+    } d;
+};
+
 struct expr;
 
 struct expr_list {
@@ -97,6 +110,7 @@ struct cmd {
 };
 
 struct var_list {
+  struct type * cur;
   char * name;
   struct var_list * next;
 };
@@ -104,9 +118,9 @@ struct var_list {
 struct glob_item {
   enum GlobItemType t;
   union {
-    struct {char * name; struct var_list * args; struct cmd * body; } FUNC_DEF;
+    struct {struct type * return_type; char * name; struct var_list * args; struct cmd * body; } FUNC_DEF;
     struct {char * name; struct var_list * args; struct cmd * body; } PROC_DEF;
-    struct {struct expr * name;} GLOB_VAR;
+    struct {struct type * var_type; char * name;} GLOB_VAR;
   } d;
 };
 
@@ -115,6 +129,9 @@ struct glob_item_list {
   struct glob_item_list * next;
 };
 
+
+struct type * TPtr_int();
+struct type * TPtr_int_1(struct type * last);
 struct expr_list * TENil();
 struct expr_list * TECons(struct expr * data, struct expr_list * next);
 struct expr * TConst(unsigned int value);
@@ -139,9 +156,9 @@ struct cmd * TBreak();
 struct cmd * TContinue();
 struct cmd * TReturn();
 struct var_list * TVNil();
-struct var_list * TVCons(char * name, struct var_list * next);
-struct glob_item * TGlobVar(struct expr * name);
-struct glob_item * TFuncDef(char * name, struct var_list * args,
+struct var_list * TVCons(struct type * cur, char * name, struct var_list * next);
+struct glob_item * TGlobVar(struct type * var_type, char * name);
+struct glob_item * TFuncDef(struct type * return_type, char * name, struct var_list * args,
                             struct cmd * body);
 struct glob_item * TProcDef(char * name, struct var_list * args,
                             struct cmd * body);
@@ -149,6 +166,7 @@ struct glob_item_list * TGNil();
 struct glob_item_list * TGCons(struct glob_item * data,
                                struct glob_item_list * next);
 
+void print_type(struct type * t);
 void print_binop(enum BinOpType op);
 void print_unop(enum UnOpType op);
 void print_expr(struct expr * e);
