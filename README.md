@@ -88,22 +88,22 @@ void print_type(struct type * t) {
 
 - 输入
 
-  ```C
-void main() {
-  int ***n;
-  ***n = read_int();
-  int **m;
-  **m = ***n + 1;
-  write_int(**m + 2)
-}
-  ```
+    ```C
+    void main() {
+      int ***n;
+      ***n = read_int();
+      int **m;
+      **m = ***n + 1;
+      write_int(**m + 2)
+    }
+    ```
 
 - 输出
 
-  ```lisp
-void main()
-   DECL(PTR(PTR(PTR(INT))),n,SEQ(ASGN(DEREF(DEREF(DEREF(VAR(n)))),FUNC(read_int)),DECL(PTR(PTR(INT)),m,SEQ(ASGN(DEREF(DEREF(VAR(m))),PLUS(DEREF(DEREF(DEREF(VAR(n)))),CONST(1))),PROC(write_int,PLUS(DEREF(DEREF(VAR(m))),CONST(2)))))))
-  ```
+    ```lisp
+    void main()
+       DECL(PTR(PTR(PTR(INT))),n,SEQ(ASGN(DEREF(DEREF(DEREF(VAR(n)))),FUNC(read_int)),DECL(PTR(PTR(INT)),m,SEQ(ASGN(DEREF(DEREF(VAR(m))),PLUS(DEREF(DEREF(DEREF(VAR(n)))),CONST(1))),PROC(write_int,PLUS(DEREF(DEREF(VAR(m))),CONST(2)))))))
+    ```
 
   
 
@@ -124,7 +124,7 @@ void main()
   }
   
   ```
-  
+
 - 输出
 
   ```lisp
