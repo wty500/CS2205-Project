@@ -24,8 +24,8 @@ void g(int* a,int* b){ // 普通过程
 }
 
 int ***n; // 多级指针
-void(**p)(int, int**); // 指向过程指针的指针p
-int*(*fun)(int*, int***); // 函数指针fun
+void(**p)(int, int**);    // 指向过程指针的指针p
+int*(*fun)(int*, int***); // 函数指针fun，这是一个参数为(int*, int***)，返回值为int*的函数
 
 int(*)(int, int**) main(int** a, int*** b) { // 返回值为函数指针的函数
 ```
