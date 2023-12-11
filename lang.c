@@ -471,31 +471,30 @@ void print_type(struct type * t) {
             }
             break;
         case T_PTR_FUNC:
-            print_type(t -> d.PTR_FUNC.return_type);
-            printf("(");
             for(int i = 0; i < t -> d.PTR_FUNC.num_of_ptr - 1; i++){
                 printf("PTR(");
             }
-            printf("PTR");
-            for(int i = 0; i < t -> d.PTR_FUNC.num_of_ptr - 1; i++){
-                printf(")");
-            }
-            printf(")(");
+            printf("FUNPTR");
+            printf("((");
             print_type_list(t -> d.PTR_FUNC.arg_list);
-            printf(")");
+            printf("),(");
+            print_type(t -> d.PTR_FUNC.return_type);
+            printf("))");
+            for(int i = 0; i < t -> d.PTR_FUNC.num_of_ptr - 1; i++){
+              printf(")");
+            }
             break;
         case T_PTR_PROC:
-            printf("(");
             for(int i = 0; i < t -> d.PTR_PROC.num_of_ptr - 1; i++){
                 printf("PTR(");
             }
-            printf("PTR");
-            for(int i = 0; i < t -> d.PTR_PROC.num_of_ptr - 1; i++){
-                printf(")");
-            }
-            printf(")(");
+            printf("PROCPTR");
+            printf("(");
             print_type_list(t -> d.PTR_PROC.arg_list);
             printf(")");
+            for(int i = 0; i < t -> d.PTR_PROC.num_of_ptr - 1; i++){
+              printf(")");
+            }
             break;
     }
 }

@@ -1,4 +1,4 @@
-int(**n)(int, int**);
+int*(**n)(int(*)(int, int**), int**);
 
 void(**p)(int, int**);
 
