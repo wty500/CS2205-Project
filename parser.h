@@ -98,6 +98,8 @@ unsigned int n;
 char * i;
 struct expr * e;
 struct type * t;
+struct type_list * tl;
+struct ptr_num * pn;
 struct expr_list * el;
 struct var_list * vl;
 struct glob_item * gi;
@@ -107,7 +109,7 @@ void * none;
 
 
 /* Line 2058 of yacc.c  */
-#line 111 "parser.h"
+#line 113 "parser.h"
 } YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */

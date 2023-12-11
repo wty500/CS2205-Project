@@ -1,8 +1,9 @@
-int**** k;
+int(**n)(int, int**);
 
-int*** main(int** a, int*** b) {
-  int ***n;
-  ***n = read_int();
+void(**p)(int, int**);
+
+int(*)(int, int**) main(int** a, int*** b) {
+  int(**n)(int, int**);
   int **m;
   **m = ***n + 1;
   write_int(**m + 2)
