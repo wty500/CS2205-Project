@@ -13,6 +13,8 @@ unsigned int n;
 char * i;
 struct expr * e;
 struct type * t;
+struct type_list * tl;
+struct ptr_num * pn;
 struct expr_list * el;
 struct var_list * vl;
 struct glob_item * gi;
@@ -43,7 +45,10 @@ void * none;
 %type <gil> NT_WHOLE
 %type <c> NT_CMD
 %type <e> NT_P_IDENT // pointer to pointer to ... to ident
+%type <t> NT_TYPE // int, int*, int** ...... and all kinds of pointer to function
 %type <t> NT_TYPE1 // int, int*, int** ......
+%type <pn> NT_PTR_NUM // the number of *
+%type <tl> NT_TYPE_LIST
 %type <e> NT_EXPR0
 %type <e> NT_EXPR1
 %type <e> NT_EXPR
@@ -85,6 +90,38 @@ NT_GLOBAL_ITEM_LIST:
   }
 ;
 
+NT_PTR_NUM:
+  TM_MUL
+  {
+  $$ = (TPtr_num());
+  }
+| NT_PTR_NUM TM_MUL
+  {
+  $$ = (TPtr_num_1($1));
+  }
+
+NT_TYPE_LIST:
+  NT_TYPE TM_COMMA NT_TYPE_LIST
+  {
+    $$ = (TTCons($1,$3));
+  }
+| NT_TYPE
+  {
+    $$ = (TTCons($1,TTNil()));
+  }
+;
+
+NT_TYPE:
+  NT_TYPE1
+  {
+    $$ = ($1);
+  }
+| NT_TYPE TM_LEFT_PAREN NT_PTR_NUM TM_RIGHT_PAREN TM_LEFT_PAREN NT_TYPE_LIST TM_RIGHT_PAREN
+  {
+    $$ = (TPtr_func($1,$3,$6));
+  }
+;
+
 NT_TYPE1:
   NT_TYPE1 TM_MUL
   {
@@ -95,6 +132,8 @@ NT_TYPE1:
     $$ = (TPtr_int());
   }
 ;
+
+
 
 NT_VAR_LIST:
   NT_TYPE1 TM_IDENT TM_COMMA NT_VAR_LIST
@@ -123,11 +162,19 @@ NT_GLOBAL_ITEM:
   {
     $$ = (TGlobVar($1,$2));
   }
-| NT_TYPE1 TM_IDENT TM_LEFT_PAREN TM_RIGHT_PAREN TM_LEFT_BRACE NT_CMD TM_RIGHT_BRACE
+| NT_TYPE TM_LEFT_PAREN NT_PTR_NUM TM_IDENT TM_RIGHT_PAREN TM_LEFT_PAREN NT_TYPE_LIST TM_RIGHT_PAREN
+  {
+    $$ = (TGlobVar_1($1,$3,$7,$4));
+  }
+| TM_PROC_DEF TM_LEFT_PAREN NT_PTR_NUM TM_IDENT TM_RIGHT_PAREN TM_LEFT_PAREN NT_TYPE_LIST TM_RIGHT_PAREN
+  {
+    $$ = (TGlobVar_2($3,$7,$4));
+  }
+| NT_TYPE TM_IDENT TM_LEFT_PAREN TM_RIGHT_PAREN TM_LEFT_BRACE NT_CMD TM_RIGHT_BRACE
   {
     $$ = (TFuncDef($1,$2,TVNil(),$6));
   }
-| NT_TYPE1 TM_IDENT TM_LEFT_PAREN NT_VAR_LIST TM_RIGHT_PAREN TM_LEFT_BRACE NT_CMD TM_RIGHT_BRACE
+| NT_TYPE TM_IDENT TM_LEFT_PAREN NT_VAR_LIST TM_RIGHT_PAREN TM_LEFT_BRACE NT_CMD TM_RIGHT_BRACE
   {
     $$ = (TFuncDef($1,$2,$4,$7));
   }
@@ -142,9 +189,17 @@ NT_GLOBAL_ITEM:
 ;
 
 NT_CMD:
-  TM_INT NT_P_IDENT TM_SEMICOL NT_CMD
+   NT_TYPE1 TM_IDENT TM_SEMICOL NT_CMD
   {
-    $$ = (TDecl($2,$4));
+    $$ = (TDecl($1,$2,$4));
+  }
+| NT_TYPE TM_LEFT_PAREN NT_PTR_NUM TM_IDENT TM_RIGHT_PAREN TM_LEFT_PAREN NT_TYPE_LIST TM_RIGHT_PAREN TM_SEMICOL NT_CMD
+  {
+    $$ = (TDecl_1($1,$3,$7,$4,$10));
+  }
+| TM_PROC_DEF TM_LEFT_PAREN NT_PTR_NUM TM_IDENT TM_RIGHT_PAREN TM_LEFT_PAREN NT_TYPE_LIST TM_RIGHT_PAREN TM_SEMICOL NT_CMD
+  {
+    $$ = (TDecl_2($3,$7,$4,$10));
   }
 | NT_EXPR TM_ASGNOP NT_EXPR
   {

@@ -58,17 +58,31 @@ enum GlobItemType {
 };
 
 enum TypeType {
-    T_PTR_INT
+    T_PTR_INT,
+    T_PTR_FUNC,
+    T_PTR_PROC
 };
 
 struct type;
+
+struct type_list {
+    struct type * data;
+    struct type_list * next;
+};
 
 struct type {
     enum TypeType t;
     union {
       struct {unsigned int num_of_ptr; } PTR_INT;
+      struct {struct type * return_type; unsigned int num_of_ptr; struct type_list * arg_list; } PTR_FUNC;
+      struct {unsigned int num_of_ptr; struct type_list * arg_list; } PTR_PROC;
     } d;
 };
+
+struct ptr_num {
+    unsigned int num_ptr;
+};
+
 
 struct expr;
 
@@ -94,7 +108,7 @@ struct expr {
 struct cmd {
   enum CmdType t;
   union {
-    struct {struct expr * name; struct cmd * body; } DECL;
+    struct {struct type * type; char * name; struct cmd * body; } DECL;
     struct {struct expr * left; struct expr * right; } ASGN;
     struct {struct cmd * left; struct cmd * right; } SEQ;
     struct {struct expr * cond; struct cmd * left; struct cmd * right; } IF;
@@ -132,6 +146,13 @@ struct glob_item_list {
 
 struct type * TPtr_int();
 struct type * TPtr_int_1(struct type * last);
+struct type * TPtr_func(struct type * return_type, struct ptr_num * num_ptr, struct type_list * list);
+struct type * TPtr_proc(struct ptr_num * num_ptr, struct type_list * list);
+struct ptr_num * TPtr_num();
+struct ptr_num * TPtr_num_1(struct ptr_num * last);
+struct type_list * TTNil();
+struct type_list * TTCons(struct type * cur, struct type_list * next);
+
 struct expr_list * TENil();
 struct expr_list * TECons(struct expr * data, struct expr_list * next);
 struct expr * TConst(unsigned int value);
@@ -143,7 +164,9 @@ struct expr * TUnOp(enum UnOpType op, struct expr * arg);
 struct expr * TDeref(struct expr * arg);
 struct expr * TAddrOf(struct expr * arg);
 struct expr * TFunc(char * name, struct expr_list * args);
-struct cmd * TDecl(struct expr * name, struct cmd * body);
+struct cmd * TDecl(struct type * type, char * name, struct cmd * body);
+struct cmd * TDecl_1(struct type * return_type, struct ptr_num * num_ptr, struct type_list * list, char * name, struct cmd * body);
+struct cmd * TDecl_2(struct ptr_num * num_ptr, struct type_list * list, char * name, struct cmd * body);
 struct cmd * TAsgn(struct expr * left, struct expr * right);
 struct cmd * TSeq(struct cmd * left, struct cmd * right);
 struct cmd * TIf(struct expr * cond, struct cmd * left, struct cmd * right);
@@ -158,6 +181,8 @@ struct cmd * TReturn();
 struct var_list * TVNil();
 struct var_list * TVCons(struct type * cur, char * name, struct var_list * next);
 struct glob_item * TGlobVar(struct type * var_type, char * name);
+struct glob_item * TGlobVar_1(struct type * return_type, struct ptr_num * num_ptr, struct type_list * list, char * name); //global var并且形式为函数指针
+struct glob_item * TGlobVar_2(struct ptr_num * num_ptr, struct type_list * list, char * name); //global var并且形式为过程指针
 struct glob_item * TFuncDef(struct type * return_type, char * name, struct var_list * args,
                             struct cmd * body);
 struct glob_item * TProcDef(char * name, struct var_list * args,
@@ -167,6 +192,7 @@ struct glob_item_list * TGCons(struct glob_item * data,
                                struct glob_item_list * next);
 
 void print_type(struct type * t);
+void print_type_list(struct type_list * tl);
 void print_binop(enum BinOpType op);
 void print_unop(enum UnOpType op);
 void print_expr(struct expr * e);

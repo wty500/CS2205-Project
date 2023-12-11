@@ -12,6 +12,24 @@ struct type * new_type() {
     return res;
 }
 
+struct type_list * new_type_list() {
+    struct type_list * res = (struct type_list *) malloc(sizeof(struct type_list));
+    if (res == NULL) {
+        printf("Failure in malloc.\n");
+        exit(0);
+    }
+    return res;
+}
+
+struct ptr_num * new_ptr_num() {
+    struct ptr_num * res = (struct ptr_num *) malloc(sizeof(struct ptr_num));
+    if (res == NULL) {
+        printf("Failure in malloc.\n");
+        exit(0);
+    }
+    return res;
+}
+
 struct expr * new_expr_ptr() {
   struct expr * res = (struct expr *) malloc(sizeof(struct expr));
   if (res == NULL) {
@@ -80,6 +98,46 @@ struct type * TPtr_int_1(struct type * last) {
     struct type * res = new_type();
     res -> t = T_PTR_INT;
     res -> d.PTR_INT.num_of_ptr = last -> d.PTR_INT.num_of_ptr + 1;
+    return res;
+}
+
+struct type * TPtr_func(struct type * return_type, struct ptr_num * num_ptr, struct type_list * list) {
+    struct type * res = new_type();
+    res -> t = T_PTR_FUNC;
+    res -> d.PTR_FUNC.return_type = return_type;
+    res -> d.PTR_FUNC.num_of_ptr = num_ptr -> num_ptr;
+    res -> d.PTR_FUNC.arg_list = list;
+    return res;
+}
+
+struct type * TPtr_proc(struct ptr_num * num_ptr, struct type_list * list) {
+    struct type * res = new_type();
+    res -> t = T_PTR_PROC;
+    res -> d.PTR_PROC.num_of_ptr = num_ptr -> num_ptr;
+    res -> d.PTR_PROC.arg_list = list;
+    return res;
+}
+
+struct ptr_num * TPtr_num() {
+    struct ptr_num * res = new_ptr_num();
+    res -> num_ptr = 1;
+    return res;
+}
+
+struct ptr_num * TPtr_num_1(struct ptr_num * last) {
+    struct ptr_num * res = new_ptr_num();
+    res -> num_ptr = last -> num_ptr + 1;
+    return res;
+}
+
+struct type_list * TTNil(){
+    return NULL;
+}
+
+struct type_list * TTCons(struct type * cur, struct type_list * next) {
+    struct type_list * res = new_type_list();
+    res -> data = cur;
+    res -> next = next;
     return res;
 }
 
@@ -154,12 +212,40 @@ struct expr * TFunc(char * name, struct expr_list * args) {
   return res;
 }
 
-struct cmd * TDecl(struct expr * name, struct cmd * body) {
+struct cmd * TDecl(struct type * type, char * name, struct cmd * body) {
   struct cmd * res = new_cmd_ptr();
   res -> t = T_DECL;
+  res -> d.DECL.type = type;
   res -> d.DECL.name = name;
   res -> d.DECL.body = body;
   return res;
+}
+
+struct cmd * TDecl_1(struct type * return_type, struct ptr_num * num_ptr, struct type_list * list, char * name, struct cmd * body) {
+    struct type * res = new_type();
+    res -> t = T_PTR_FUNC;
+    res -> d.PTR_FUNC.return_type = return_type;
+    res -> d.PTR_FUNC.num_of_ptr = num_ptr -> num_ptr;
+    res -> d.PTR_FUNC.arg_list = list;
+    struct cmd * res1 = new_cmd_ptr();
+    res1 -> t = T_DECL;
+    res1 -> d.DECL.name = name;
+    res1 -> d.DECL.type = res;
+    res1 -> d.DECL.body = body;
+    return res1;
+}
+
+struct cmd * TDecl_2(struct ptr_num * num_ptr, struct type_list * list, char * name, struct cmd * body) {
+    struct type * res = new_type();
+    res -> t = T_PTR_FUNC;
+    res -> d.PTR_PROC.num_of_ptr = num_ptr -> num_ptr;
+    res -> d.PTR_PROC.arg_list = list;
+    struct cmd * res1 = new_cmd_ptr();
+    res1 -> t = T_DECL;
+    res1 -> d.DECL.name = name;
+    res1 -> d.DECL.body = body;
+    res1 -> d.DECL.type = res;
+    return res1;
 }
 
 struct cmd * TAsgn(struct expr * left, struct expr * right) {
@@ -281,6 +367,31 @@ struct glob_item * TGlobVar(struct type * var_type, char * name) {
   return res;
 }
 
+struct glob_item * TGlobVar_1(struct type * return_type, struct ptr_num * num_ptr, struct type_list * list, char * name) {
+    struct type * res = new_type();
+    res -> t = T_PTR_FUNC;
+    res -> d.PTR_FUNC.return_type = return_type;
+    res -> d.PTR_FUNC.num_of_ptr = num_ptr -> num_ptr;
+    res -> d.PTR_FUNC.arg_list = list;
+    struct glob_item * res1 = new_glob_item_ptr();
+    res1 -> t = T_GLOB_VAR;
+    res1 -> d.GLOB_VAR.var_type = res;
+    res1 -> d.GLOB_VAR.name = name;
+    return res1;
+}
+
+struct glob_item * TGlobVar_2(struct ptr_num * num_ptr, struct type_list * list, char * name) {
+    struct type * res = new_type();
+    res -> t = T_PTR_PROC;
+    res -> d.PTR_PROC.num_of_ptr = num_ptr -> num_ptr;
+    res -> d.PTR_PROC.arg_list = list;
+    struct glob_item * res1 = new_glob_item_ptr();
+    res1 -> t = T_GLOB_VAR;
+    res1 -> d.GLOB_VAR.var_type = res;
+    res1 -> d.GLOB_VAR.name = name;
+    return res1;
+}
+
 struct glob_item_list * TGNil() {
   return NULL;
 }
@@ -359,8 +470,53 @@ void print_type(struct type * t) {
                 printf(")");
             }
             break;
+        case T_PTR_FUNC:
+            print_type(t -> d.PTR_FUNC.return_type);
+            printf("(");
+            for(int i = 0; i < t -> d.PTR_FUNC.num_of_ptr - 1; i++){
+                printf("PTR(");
+            }
+            printf("PTR");
+            for(int i = 0; i < t -> d.PTR_FUNC.num_of_ptr - 1; i++){
+                printf(")");
+            }
+            printf(")(");
+            print_type_list(t -> d.PTR_FUNC.arg_list);
+            printf(")");
+            break;
+        case T_PTR_PROC:
+            printf("(");
+            for(int i = 0; i < t -> d.PTR_PROC.num_of_ptr - 1; i++){
+                printf("PTR(");
+            }
+            printf("PTR");
+            for(int i = 0; i < t -> d.PTR_PROC.num_of_ptr - 1; i++){
+                printf(")");
+            }
+            printf(")(");
+            print_type_list(t -> d.PTR_PROC.arg_list);
+            printf(")");
+            break;
     }
 }
+
+void _print_type_list(struct type_list * tl) {
+    if (tl == NULL) {
+        return;
+    }
+    printf(",");
+    print_type(tl -> data);
+    _print_type_list(tl -> next);
+}
+
+void print_type_list(struct type_list * tl) {
+    if (tl == NULL) {
+        return;
+    }
+    print_type(tl -> data);
+    _print_type_list(tl -> next);
+}
+
 
 void print_expr(struct expr * e) {
   switch (e -> t) {
@@ -420,7 +576,8 @@ void print_cmd(struct cmd * c) {
   switch (c -> t) {
   case T_DECL:
     printf("DECL(");
-    print_expr(c -> d.DECL.name);
+    print_type(c -> d.DECL.type);
+    printf(",%s",c -> d.DECL.name);
     printf(",");
     print_cmd(c -> d.DECL.body);
     printf(")");
@@ -520,15 +677,17 @@ void print_glob_item(struct glob_item * g) {
     printf("\n\n");
     return;
   case T_PROC_DEF:
-    printf("PROC %s(", g -> d.PROC_DEF.name);
+    printf("void %s(", g -> d.PROC_DEF.name);
     print_var_list(g -> d.PROC_DEF.args);
     printf(")\n  ");
     print_cmd(g -> d.PROC_DEF.body);
     printf("\n\n");
     return;
   case T_GLOB_VAR:
+      printf("DECL(");
     print_type(g -> d.GLOB_VAR.var_type);
-    printf(" %s", g -> d.GLOB_VAR.name);
+    printf(",%s", g -> d.GLOB_VAR.name);
+    printf(")");
     printf("\n\n");
     return;
   }
