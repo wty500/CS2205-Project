@@ -15,7 +15,7 @@
 
 在我们的类型系统中，声明变量的语句类似于：
 
-```
+```C
 int f(int a,int b){ // 普通函数
 	...
 }
@@ -24,8 +24,8 @@ void g(int* a,int* b){ // 普通过程
 }
 
 int ***n; // 多级指针
-void(**p)(int, int**); // 过程指针p
-int*(**fun)(int*, int***); // 函数指针fun
+void(**p)(int, int**);    // 指向过程指针的指针p
+int*(*fun)(int*, int***); // 函数指针fun，这是一个参数为(int*, int***)，返回值为int*的函数
 
 int(*)(int, int**) main(int** a, int*** b) { // 返回值为函数指针的函数
 ```
@@ -88,53 +88,52 @@ void print_type(struct type * t) {
 
 - 输入
 
-	```C
+```C
 void main() {
-  int ***n;
-  ***n = read_int();
-  int **m;
-  **m = ***n + 1;
-  write_int(**m + 2)
+int ***n;
+***n = read_int();
+int **m;
+**m = ***n + 1;
+write_int(**m + 2)
 }
-	```
+```
 
 - 输出
 
-	```lisp
+```lisp
 void main()
-   DECL(PTR(PTR(PTR(INT))),n,SEQ(ASGN(DEREF(DEREF(DEREF(VAR(n)))),FUNC(read_int)),DECL(PTR(PTR(INT)),m,SEQ(ASGN(DEREF(DEREF(VAR(m))),PLUS(DEREF(DEREF(DEREF(VAR(n)))),CONST(1))),PROC(write_int,PLUS(DEREF(DEREF(VAR(m))),CONST(2)))))))
-	```
+DECL(PTR(PTR(PTR(INT))),n,SEQ(ASGN(DEREF(DEREF(DEREF(VAR(n)))),FUNC(read_int)),DECL(PTR(PTR(INT)),m,SEQ(ASGN(DEREF(DEREF(VAR(m))),PLUS(DEREF(DEREF(DEREF(VAR(n)))),CONST(1))),PROC(write_int,PLUS(DEREF(DEREF(VAR(m))),CONST(2)))))))
+```
 
   
 
-  ### 样例01 (sample_src01.jtl)
+### 样例01 (sample_src01.jtl)
 
 - 输入
 
-  ```c
-  int*(**n)(int(*)(int, int**), int**);
-  
-  void(**p)(int, int**);
-  
-  int(*)(int, int**) main(int** a, int*** b) {
-    int(**n)(int, int**);
-    int **m;
-    **m = ***n + 1;
-    write_int(**m + 2)
-  }
-  
-  ```
-  
+```c
+int*(**n)(int(*)(int, int**), int**);
+
+void(**p)(int, int**);
+
+int(*)(int, int**) main(int** a, int*** b) {
+int(**n)(int, int**);
+int **m;
+**m = ***n + 1;
+write_int(**m + 2)
+}
+
+```
 
 - 输出
 
-  ```lisp
-  DECL(PTR(FUNPTR((FUNPTR((INT,PTR(PTR(INT))),(INT)),PTR(PTR(INT))),(PTR(INT)))),n)
-  
-  DECL(PTR(PROCPTR(INT,PTR(PTR(INT)))),p)
-  
-  FUNPTR((INT,PTR(PTR(INT))),(INT)) main(PTR(PTR(INT)) a,PTR(PTR(PTR(INT))) b)
-    DECL(PTR(FUNPTR((INT,PTR(PTR(INT))),(INT))),n,DECL(PTR(PTR(INT)),m,SEQ(ASGN(DEREF(DEREF(VAR(m))),PLUS(DEREF(DEREF(DEREF(VAR(n)))),CONST(1))),PROC(write_int,PLUS(DEREF(DEREF(VAR(m))),CONST(2))))))
-  ```
+```lisp
+DECL(PTR(FUNPTR((FUNPTR((INT,PTR(PTR(INT))),(INT)),PTR(PTR(INT))),(PTR(INT)))),n)
+
+DECL(PTR(PROCPTR(INT,PTR(PTR(INT)))),p)
+
+FUNPTR((INT,PTR(PTR(INT))),(INT)) main(PTR(PTR(INT)) a,PTR(PTR(PTR(INT))) b)
+DECL(PTR(FUNPTR((INT,PTR(PTR(INT))),(INT))),n,DECL(PTR(PTR(INT)),m,SEQ(ASGN(DEREF(DEREF(VAR(m))),PLUS(DEREF(DEREF(DEREF(VAR(n)))),CONST(1))),PROC(write_int,PLUS(DEREF(DEREF(VAR(m))),CONST(2))))))
+```
 
   
