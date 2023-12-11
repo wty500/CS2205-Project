@@ -71,12 +71,12 @@ struct type_list {
 };
 
 struct type {
-    enum TypeType t;
+    enum TypeType t; // 0: int, 1: func, 2: proc
     union {
       struct {unsigned int num_of_ptr; } PTR_INT;
       struct {struct type * return_type; unsigned int num_of_ptr; struct type_list * arg_list; } PTR_FUNC;
       struct {unsigned int num_of_ptr; struct type_list * arg_list; } PTR_PROC;
-    } d;
+    } d; // data
 };
 
 struct ptr_num {
