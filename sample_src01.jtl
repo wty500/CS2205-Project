@@ -2,6 +2,8 @@ int*(**n)(int(*)(int, int**), int**);
 
 void(**p)(int, int**);
 
+void(**p)();
+
 int(*)(int, int**) main(int** a, int*** b) {
   int(**n)(int, int**);
   int **m;
