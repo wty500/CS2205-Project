@@ -76,6 +76,7 @@ struct type {
       struct {unsigned int num_of_ptr; } PTR_INT;
       struct {struct type * return_type; unsigned int num_of_ptr; struct type_list * arg_list; } PTR_FUNC;
       struct {unsigned int num_of_ptr; struct type_list * arg_list; } PTR_PROC;
+      char * TEMP_TYPENAME;
     } d; // data
 };
 
@@ -129,11 +130,24 @@ struct var_list {
   struct var_list * next;
 };
 
+struct type_name_list {
+  char * name;
+  struct type_name_list * next;
+};
+
+struct temp_var_list{
+    bool solved; // 是否已经被实例化
+    struct type * cur; // 变量类型（如果已实例化）
+    char * tpname; // typename名称（如果未实例化）
+    char * name;
+    struct temp_var_list * next;
+};
+
 struct glob_item {
   enum GlobItemType t;
   union {
-    struct {struct type * return_type; char * name; struct var_list * args; struct cmd * body; } FUNC_DEF;
-    struct {char * name; struct var_list * args; struct cmd * body; } PROC_DEF;
+    struct {struct type * return_type; char * name; struct var_list * templates; struct var_list * args; struct cmd * body; } FUNC_DEF;
+    struct {char * name; struct var_list * templates; struct var_list * args; struct cmd * body; } PROC_DEF;
     struct {struct type * var_type; char * name;} GLOB_VAR;
   } d;
 };
@@ -143,11 +157,13 @@ struct glob_item_list {
   struct glob_item_list * next;
 };
 
-
+char* StrNil();
+struct type * TPNil();
 struct type * TPtr_int();
 struct type * TPtr_int_1(struct type * last);
 struct type * TPtr_func(struct type * return_type, struct ptr_num * num_ptr, struct type_list * list);
 struct type * TPtr_proc(struct ptr_num * num_ptr, struct type_list * list);
+struct type * TIdent(char * name);
 struct ptr_num * TPtr_num();
 struct ptr_num * TPtr_num_1(struct ptr_num * last);
 struct type_list * TTNil();
@@ -180,10 +196,16 @@ struct cmd * TContinue();
 struct cmd * TReturn();
 struct var_list * TVNil();
 struct var_list * TVCons(struct type * cur, char * name, struct var_list * next);
+struct temp_var_list * TTVNil();
+struct temp_var_list * TTVCons(bool solved, struct type * cur, char * tpname, char * name, struct temp_var_list * next);
+struct type_name_list * TNLNil();
+struct type_name_list * TNLCons(char * name, struct type_name_list * next);
 struct glob_item * TGlobVar(struct type * var_type, char * name);
 struct glob_item * TGlobVar_1(struct type * return_type, struct ptr_num * num_ptr, struct type_list * list, char * name); //global var并且形式为函数指针
 struct glob_item * TGlobVar_2(struct ptr_num * num_ptr, struct type_list * list, char * name); //global var并且形式为过程指针
 struct glob_item * TFuncDef(struct type * return_type, char * name, struct var_list * args,
+                            struct cmd * body);
+struct glob_item * TTemFuncDef(struct type_name_list* temp_types, type * return_type, char * name, struct temp_var_list * args,
                             struct cmd * body);
 struct glob_item * TProcDef(char * name, struct var_list * args,
                             struct cmd * body);
