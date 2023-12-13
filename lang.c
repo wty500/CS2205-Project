@@ -87,6 +87,14 @@ struct glob_item_list *new_glob_item_list_ptr() {
     return res;
 }
 
+char* StrNil(){
+    return NULL;
+}
+
+struct type * TPNil(){
+    return NULL;
+}
+
 struct type *TPtr_int() {
     struct type *res = new_type();
     res->t = T_PTR_INT;
@@ -115,6 +123,13 @@ struct type *TPtr_proc(struct ptr_num *num_ptr, struct type_list *list) {
     res->t = T_PTR_PROC;
     res->d.PTR_PROC.num_of_ptr = num_ptr->num_ptr;
     res->d.PTR_PROC.arg_list = list;
+    return res;
+}
+
+struct type * TIdent(char * name){
+    struct type *res = new_type();
+    res->t = T_IDENT;
+    res->d.TEMP_TYPENAME = name;
     return res;
 }
 
@@ -338,6 +353,40 @@ struct var_list *TVCons(struct type *cur, char *name, struct var_list *next) {
     res->next = next;
     return res;
 }
+
+struct temp_var_list *TTVNil() {
+    return NULL;
+}
+
+struct temp_var_list * TTVCons(bool solved, struct type * cur, char * tpname, char * name, struct temp_var_list * next){
+    struct temp_var_list *res = (struct temp_var_list *) malloc(sizeof(struct temp_var_list));
+    if (res == NULL) {
+        printf("Failure in malloc.\n");
+        exit(0);
+    }
+    res->solved = solved;
+    res->cur = cur;
+    res->tpname = tpname;
+    res->name = name;
+    res->next = next;
+    return res;
+}
+
+struct type_name_list * TNLNil(){
+    return NULL;
+}
+
+struct type_name_list * TNLCons(char * name, struct type_name_list * next){
+    struct type_name_list *res = (struct type_name_list *) malloc(sizeof(struct type_name_list));
+    if (res == NULL) {
+        printf("Failure in malloc.\n");
+        exit(0);
+    }
+    res->name = name;
+    res->next = next;
+    return res;
+}
+
 
 struct glob_item *TFuncDef(struct type *return_type, char *name, struct var_list *args,
                            struct cmd *body) {

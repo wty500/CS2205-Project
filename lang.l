@@ -40,9 +40,9 @@
     return TM_FOR;
 }
 
-"func" {
+/* "func" {
     return TM_FUNC_DEF;
-}
+} */
 
 "void" {
     return TM_PROC_DEF;
@@ -58,6 +58,14 @@
 
 "continue" {
     return TM_CONTINUE;
+}
+
+"template" {
+    return TM_TEMPLATE;
+}
+
+"typename" {
+    return TM_TYPENAME;
 }
 
 [_A-Za-z][_A-Za-z0-9]* {
@@ -151,6 +159,9 @@
 
 "&" {
     return TM_ADDR_OF;
+}
+":" {
+    return TM_COLON;
 }
 [ \t\n\r]    { };
 
