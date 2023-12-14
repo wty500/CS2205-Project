@@ -14,7 +14,7 @@ char * i;
 struct expr * e;
 struct type * t;
 struct type_list * tl;
-struct temp_var_list * tvl;
+// struct temp_var_list * tvl;
 struct ptr_num * pn;
 struct expr_list * el;
 struct var_list * vl;
@@ -59,7 +59,7 @@ void * none;
 %type <el> NT_EXPR_LIST
 %type <vl> NT_VAR_LIST
 %type <tnl> NT_TYPENAME_LIST
-%type <tvl> NT_TMP_VAR_LIST
+/* %type <tvl> NT_TMP_VAR_LIST */
 %type <gi> NT_GLOBAL_ITEM
 %type <gil> NT_GLOBAL_ITEM_LIST
 
@@ -137,7 +137,7 @@ NT_TYPE1: // int, int*, int** ...... or T, T*, T** ......
   {
     $$ = (TPtr_int());
   }
-| TM_IDENT
+| TM_IDENT TM_COL
   {
     $$ = (TIdent($1));
   }
@@ -155,7 +155,7 @@ NT_VAR_LIST:
   }
 ;
 
-NT_TMP_VAR_LIST:
+/* NT_TMP_VAR_LIST:
   NT_TYPE1 TM_IDENT TM_COMMA NT_TMP_VAR_LIST
   {
     $$ = (TTVCons(1,$1,StrNil(),$2,$4));
@@ -168,11 +168,11 @@ NT_TMP_VAR_LIST:
   {
     $$ = (TTVCons(0,TPNil(),$1,$3,$5));
   }
-| TM_IDENT TM_COL TM_IDENT
+  | TM_IDENT TM_COL TM_IDENT
   {
     $$ = (TTVCons(0,TPNil(),$1,$3,TTVNil()));
   }
-
+; */
 
 NT_EXPR_LIST:
   NT_EXPR TM_COMMA NT_EXPR_LIST
@@ -221,7 +221,7 @@ NT_GLOBAL_ITEM:
   {
     $$ = (TTemFuncDef($3,$5,$6,TVNil(),$10));
   }
-| TM_TEMPLATE TM_LT NT_TYPENAME_LIST TM_GT NT_TYPE TM_IDENT TM_LEFT_PAREN NT_TMP_VAR_LIST TM_RIGHT_PAREN TM_LEFT_BRACE NT_CMD TM_RIGHT_BRACE
+| TM_TEMPLATE TM_LT NT_TYPENAME_LIST TM_GT NT_TYPE TM_IDENT TM_LEFT_PAREN NT_VAR_LIST TM_RIGHT_PAREN TM_LEFT_BRACE NT_CMD TM_RIGHT_BRACE
   {
     $$ = (TTemFuncDef($3,$5,$6,$8,$11));
   }
@@ -229,7 +229,7 @@ NT_GLOBAL_ITEM:
   {
     $$ = (TTemProcDef($3,$6,TVNil(),$10));
   }
-| TM_TEMPLATE TM_LT NT_TYPENAME_LIST TM_GT TM_PROC_DEF TM_IDENT TM_LEFT_PAREN NT_TMP_VAR_LIST TM_RIGHT_PAREN TM_LEFT_BRACE NT_CMD TM_RIGHT_BRACE
+| TM_TEMPLATE TM_LT NT_TYPENAME_LIST TM_GT TM_PROC_DEF TM_IDENT TM_LEFT_PAREN NT_VAR_LIST TM_RIGHT_PAREN TM_LEFT_BRACE NT_CMD TM_RIGHT_BRACE
   {
     $$ = (TTemProcDef($3,$6,$8,$11));
   }

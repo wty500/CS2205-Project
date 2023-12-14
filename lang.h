@@ -53,14 +53,17 @@ enum CmdType {
 
 enum GlobItemType {
   T_FUNC_DEF,
+  T_TEMP_FUNC_DEF,
   T_PROC_DEF,
+  T_TEMP_PROC_DEF,
   T_GLOB_VAR
 };
 
 enum TypeType {
     T_PTR_INT,
     T_PTR_FUNC,
-    T_PTR_PROC
+    T_PTR_PROC,
+    T_TEMPLATE_TYPE
 };
 
 struct type;
@@ -76,7 +79,7 @@ struct type {
       struct {unsigned int num_of_ptr; } PTR_INT;
       struct {struct type * return_type; unsigned int num_of_ptr; struct type_list * arg_list; } PTR_FUNC;
       struct {unsigned int num_of_ptr; struct type_list * arg_list; } PTR_PROC;
-      char * TEMP_TYPENAME;
+      struct {char * typename;} TEMPLATE_TYPE;
     } d; // data
 };
 
@@ -135,19 +138,21 @@ struct type_name_list {
   struct type_name_list * next;
 };
 
-struct temp_var_list{
-    bool solved; // 是否已经被实例化
-    struct type * cur; // 变量类型（如果已实例化）
-    char * tpname; // typename名称（如果未实例化）
-    char * name;
-    struct temp_var_list * next;
-};
+// struct temp_var_list{
+//     bool solved; // 是否已经被实例化
+//     struct type * cur; // 变量类型（如果已实例化）
+//     char * tpname; // typename名称（如果未实例化）
+//     char * name;
+//     struct temp_var_list * next;
+// };
 
 struct glob_item {
   enum GlobItemType t;
   union {
     struct {struct type * return_type; char * name; struct var_list * templates; struct var_list * args; struct cmd * body; } FUNC_DEF;
+    struct {struct type_name_list* temp_types;struct type * return_type; char * name; struct var_list * templates; struct var_list * args; struct cmd * body; } TEMP_FUNC_DEF;
     struct {char * name; struct var_list * templates; struct var_list * args; struct cmd * body; } PROC_DEF;
+    struct {struct type_name_list* temp_types;char * name; struct var_list * templates; struct var_list * args; struct cmd * body; } TEMP_PROC_DEF;
     struct {struct type * var_type; char * name;} GLOB_VAR;
   } d;
 };
@@ -196,8 +201,8 @@ struct cmd * TContinue();
 struct cmd * TReturn();
 struct var_list * TVNil();
 struct var_list * TVCons(struct type * cur, char * name, struct var_list * next);
-struct temp_var_list * TTVNil();
-struct temp_var_list * TTVCons(bool solved, struct type * cur, char * tpname, char * name, struct temp_var_list * next);
+// struct temp_var_list * TTVNil();
+// struct temp_var_list * TTVCons(struct type * cur, char * name, struct temp_var_list * next);
 struct type_name_list * TNLNil();
 struct type_name_list * TNLCons(char * name, struct type_name_list * next);
 struct glob_item * TGlobVar(struct type * var_type, char * name);
@@ -205,9 +210,11 @@ struct glob_item * TGlobVar_1(struct type * return_type, struct ptr_num * num_pt
 struct glob_item * TGlobVar_2(struct ptr_num * num_ptr, struct type_list * list, char * name); //global var并且形式为过程指针
 struct glob_item * TFuncDef(struct type * return_type, char * name, struct var_list * args,
                             struct cmd * body);
-struct glob_item * TTemFuncDef(struct type_name_list* temp_types, type * return_type, char * name, struct temp_var_list * args,
+struct glob_item * TTemFuncDef(struct type_name_list* temp_types, struct type * return_type, char * name, struct var_list * args,
                             struct cmd * body);
 struct glob_item * TProcDef(char * name, struct var_list * args,
+                            struct cmd * body);
+struct glob_item * TTemProcDef(struct type_name_list* temp_types, char * name, struct var_list * args,
                             struct cmd * body);
 struct glob_item_list * TGNil();
 struct glob_item_list * TGCons(struct glob_item * data,
@@ -215,12 +222,14 @@ struct glob_item_list * TGCons(struct glob_item * data,
 
 void print_type(struct type * t);
 void print_type_list(struct type_list * tl);
+void print_type_name_list(struct type_name_list * tnl);
 void print_binop(enum BinOpType op);
 void print_unop(enum UnOpType op);
 void print_expr(struct expr * e);
 void print_expr_list(struct expr_list * es);
 void print_cmd(struct cmd * c);
 void print_var_list(struct var_list * vs);
+// void print_temp_var_list(struct temp_var_list * vs);
 void print_glob_item(struct glob_item * g);
 void print_glob_item_list(struct glob_item_list * gs);
 

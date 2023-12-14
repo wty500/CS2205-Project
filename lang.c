@@ -128,8 +128,8 @@ struct type *TPtr_proc(struct ptr_num *num_ptr, struct type_list *list) {
 
 struct type * TIdent(char * name){
     struct type *res = new_type();
-    res->t = T_IDENT;
-    res->d.TEMP_TYPENAME = name;
+    res->t = T_TEMPLATE_TYPE;
+    res->d.TEMPLATE_TYPE.typename = name;
     return res;
 }
 
@@ -354,23 +354,23 @@ struct var_list *TVCons(struct type *cur, char *name, struct var_list *next) {
     return res;
 }
 
-struct temp_var_list *TTVNil() {
-    return NULL;
-}
+// struct temp_var_list *TTVNil() {
+//     return NULL;
+// }
 
-struct temp_var_list * TTVCons(bool solved, struct type * cur, char * tpname, char * name, struct temp_var_list * next){
-    struct temp_var_list *res = (struct temp_var_list *) malloc(sizeof(struct temp_var_list));
-    if (res == NULL) {
-        printf("Failure in malloc.\n");
-        exit(0);
-    }
-    res->solved = solved;
-    res->cur = cur;
-    res->tpname = tpname;
-    res->name = name;
-    res->next = next;
-    return res;
-}
+// struct temp_var_list * TTVCons(bool solved, struct type * cur, char * tpname, char * name, struct temp_var_list * next){
+//     struct temp_var_list *res = (struct temp_var_list *) malloc(sizeof(struct temp_var_list));
+//     if (res == NULL) {
+//         printf("Failure in malloc.\n");
+//         exit(0);
+//     }
+//     res->solved = solved;
+//     res->cur = cur;
+//     res->tpname = tpname;
+//     res->name = name;
+//     res->next = next;
+//     return res;
+// }
 
 struct type_name_list * TNLNil(){
     return NULL;
@@ -399,6 +399,18 @@ struct glob_item *TFuncDef(struct type *return_type, char *name, struct var_list
     return res;
 }
 
+struct glob_item * TTemFuncDef(struct type_name_list* temp_types, struct type * return_type, char * name, struct var_list * args,
+                            struct cmd * body){
+    struct glob_item *res = new_glob_item_ptr();
+    res->d.TEMP_FUNC_DEF.temp_types = temp_types;
+    res->d.TEMP_FUNC_DEF.return_type = return_type;
+    res->t = T_TEMP_FUNC_DEF;
+    res->d.TEMP_FUNC_DEF.name = name;
+    res->d.TEMP_FUNC_DEF.args = args;
+    res->d.TEMP_FUNC_DEF.body = body;
+    return res;
+}
+
 struct glob_item *TProcDef(char *name, struct var_list *args,
                            struct cmd *body) {
     struct glob_item *res = new_glob_item_ptr();
@@ -409,6 +421,16 @@ struct glob_item *TProcDef(char *name, struct var_list *args,
     return res;
 }
 
+struct glob_item * TTemProcDef(struct type_name_list* temp_types, char * name, struct var_list * args,
+                            struct cmd * body){
+    struct glob_item *res = new_glob_item_ptr();
+    res->d.TEMP_PROC_DEF.temp_types = temp_types;
+    res->t = T_TEMP_PROC_DEF;
+    res->d.TEMP_PROC_DEF.name = name;
+    res->d.TEMP_PROC_DEF.args = args;
+    res->d.TEMP_PROC_DEF.body = body;
+    return res;
+}
 struct glob_item *TGlobVar(struct type *var_type, char *name) {
     struct glob_item *res = new_glob_item_ptr();
     res->t = T_GLOB_VAR;
@@ -546,6 +568,11 @@ void print_type(struct type *t) {
                 printf(")");
             }
             break;
+        case T_TEMPLATE_TYPE:
+            printf("TN(");
+            printf("%s", t->d.TEMPLATE_TYPE.typename);
+            printf(")");
+            break;
     }
 }
 
@@ -566,6 +593,22 @@ void print_type_list(struct type_list *tl) {
     _print_type_list(tl->next);
 }
 
+void _print_type_name_list(struct type_name_list *tnl) {
+    if (tnl == NULL) {
+        return;
+    }
+    printf(",");
+    printf("%s", tnl->name);
+    _print_type_name_list(tnl->next);
+}
+
+void print_type_name_list(struct type_name_list *tnl) {
+    if (tnl == NULL) {
+        return;
+    }
+    printf("%s", tnl->name);
+    _print_type_name_list(tnl->next);
+}
 
 void print_expr(struct expr *e) {
     switch (e->t) {
@@ -715,6 +758,20 @@ void print_var_list(struct var_list *vs) {
     _print_var_list(vs->next);
 }
 
+// void _print_temp_var_list(struct temp_var_list *vs) {
+//     if (vs == NULL) {
+//         return;
+//     }
+//     printf(",");
+//     printf("%s:", vs->name);
+//     if (vs->solved) {
+//         print_type(vs->cur);
+//     } else {
+//         printf("%s", vs->tpname);
+//     }
+//     _print_temp_var_list(vs->next);
+// }
+
 void print_glob_item(struct glob_item *g) {
     switch (g->t) {
         case T_FUNC_DEF:
@@ -725,11 +782,32 @@ void print_glob_item(struct glob_item *g) {
             print_cmd(g->d.FUNC_DEF.body);
             printf("\n\n");
             return;
+        case T_TEMP_FUNC_DEF:
+            printf("TEMPLATE(");
+            print_type_name_list(g->d.TEMP_FUNC_DEF.temp_types);
+            printf(")\n");
+            print_type(g->d.TEMP_FUNC_DEF.return_type);
+            printf(" %s(", g->d.TEMP_FUNC_DEF.name);
+            print_var_list(g->d.TEMP_FUNC_DEF.args);
+            printf(")\n  ");
+            print_cmd(g->d.TEMP_FUNC_DEF.body);
+            printf("\n\n");
+            return;
         case T_PROC_DEF:
             printf("void %s(", g->d.PROC_DEF.name);
             print_var_list(g->d.PROC_DEF.args);
             printf(")\n  ");
             print_cmd(g->d.PROC_DEF.body);
+            printf("\n\n");
+            return;
+        case T_TEMP_PROC_DEF:
+            printf("TEMPLATE(");
+            print_type_name_list(g->d.TEMP_PROC_DEF.temp_types);
+            printf(")\n");
+            printf("void %s(", g->d.TEMP_PROC_DEF.name);
+            print_var_list(g->d.TEMP_PROC_DEF.args);
+            printf(")\n  ");
+            print_cmd(g->d.TEMP_PROC_DEF.body);
             printf("\n\n");
             return;
         case T_GLOB_VAR:

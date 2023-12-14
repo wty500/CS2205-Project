@@ -40,10 +40,6 @@
     return TM_FOR;
 }
 
-/* "func" {
-    return TM_FUNC_DEF;
-} */
-
 "void" {
     return TM_PROC_DEF;
 }
@@ -161,7 +157,7 @@
     return TM_ADDR_OF;
 }
 ":" {
-    return TM_COLON;
+    return TM_COL;
 }
 [ \t\n\r]    { };
 
