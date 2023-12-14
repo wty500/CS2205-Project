@@ -816,8 +816,8 @@ void print_glob_item(struct glob_item *g) {
             return;
         case T_GLOB_VAR:
             printf("DECL(");
+            printf("%s:", g->d.GLOB_VAR.name);
             print_type(g->d.GLOB_VAR.var_type);
-            printf(",%s", g->d.GLOB_VAR.name);
             printf(")");
             printf("\n\n");
             return;
