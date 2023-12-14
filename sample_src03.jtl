@@ -1,5 +1,5 @@
 template<typename T, typename U>
-func T fun(T a, U b) {
+T fun(T a, U b) {
   if(a==0||b==0)then{return}
   else{
     fun(a,b-1);
@@ -7,7 +7,7 @@ func T fun(T a, U b) {
   }
 };
 
-func int main(){
+int main(){
   var int a;
   a=read_int();
   var int b;
