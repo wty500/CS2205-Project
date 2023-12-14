@@ -1,0 +1,16 @@
+template<typename T, typename U>
+func T fun(T a, U b) {
+  if(a==0||b==0)then{return}
+  else{
+    fun(a,b-1);
+    fun(b,a-1)
+  }
+};
+
+func int main(){
+  var int a;
+  a=read_int();
+  var int b;
+  b=read_int();
+  fun(a,b)
+}
