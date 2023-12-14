@@ -1,6 +1,6 @@
-template<typename T>
-func T fun(T ab, int b) {
-  var int(**n)(int, T**);
+template<typename T, typename U>
+func T fun(T ab, U b) {
+  var int(**n)(U, T**);
   var void(*x)();
   var T m;
   fun(m,b-1)
