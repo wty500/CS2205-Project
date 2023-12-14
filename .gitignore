@@ -5,3 +5,7 @@ cmake-build-debug-wsl/
 main
 CMakeLists.txt
 parser.output
+parser.c
+parser.h
+lexer.c
+lexer.h
