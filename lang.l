@@ -44,10 +44,6 @@
     return TM_VAR;
 }
 
-"func" {
-    return TM_FUNC_DEF;
-}
-
 "void" {
     return TM_PROC_DEF;
 }
