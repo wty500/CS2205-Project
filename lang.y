@@ -127,6 +127,10 @@ NT_TYPE: // int, int*, int** ......, T, T*, T** ......, and all kinds of pointer
   {
     $$ = (TPtr_func($1,$3,$6));
   }
+| TM_PROC_DEF TM_LEFT_PAREN NT_PTR_NUM TM_RIGHT_PAREN TM_LEFT_PAREN NT_TYPE_LIST TM_RIGHT_PAREN
+  {
+    $$ = (TPtr_proc($3,$6));
+  }
 ;
 
 NT_TYPE1: // int, int*, int** or T, T*, T** ......
