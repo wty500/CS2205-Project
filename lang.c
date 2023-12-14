@@ -106,6 +106,7 @@ struct type *TPtr_int_1(struct type *last) {
     struct type *res = new_type();
     res->t = T_PTR_INT;
     res->d.PTR_INT.num_of_ptr = last->d.PTR_INT.num_of_ptr + 1;
+    free(last);
     return res;
 }
 
@@ -126,10 +127,20 @@ struct type *TPtr_proc(struct ptr_num *num_ptr, struct type_list *list) {
     return res;
 }
 
-struct type * TIdent(char * name){
+struct type * TPtr_T(char * name){
     struct type *res = new_type();
     res->t = T_TEMPLATE_TYPE;
     res->d.TEMPLATE_TYPE.typename = name;
+    res->d.TEMPLATE_TYPE.num_of_ptr = 0;
+    return res;
+}
+
+struct type * TPtr_T_1(struct type * last){
+    struct type *res = new_type();
+    res->t = T_TEMPLATE_TYPE;
+    res->d.TEMPLATE_TYPE.typename = last->d.TEMPLATE_TYPE.typename;
+    res->d.TEMPLATE_TYPE.num_of_ptr = last->d.TEMPLATE_TYPE.num_of_ptr + 1;
+    free(last);
     return res;
 }
 
@@ -573,9 +584,15 @@ void print_type(struct type *t) {
             }
             break;
         case T_TEMPLATE_TYPE:
+            for (int i = 0; i < t->d.TEMPLATE_TYPE.num_of_ptr; i++) {
+                printf("PTR(");
+            }
             printf("TN(");
             printf("%s", t->d.TEMPLATE_TYPE.typename);
             printf(")");
+            for (int i = 0; i < t->d.TEMPLATE_TYPE.num_of_ptr; i++) {
+                printf(")");
+            }
             break;
     }
 }

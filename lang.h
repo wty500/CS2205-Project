@@ -79,7 +79,7 @@ struct type {
       struct {unsigned int num_of_ptr; } PTR_INT;
       struct {struct type * return_type; unsigned int num_of_ptr; struct type_list * arg_list; } PTR_FUNC;
       struct {unsigned int num_of_ptr; struct type_list * arg_list; } PTR_PROC;
-      struct {char * typename;} TEMPLATE_TYPE;
+      struct {char * typename;unsigned int num_of_ptr;} TEMPLATE_TYPE;
     } d; // data
 };
 
@@ -168,7 +168,8 @@ struct type * TPtr_int();
 struct type * TPtr_int_1(struct type * last);
 struct type * TPtr_func(struct type * return_type, struct ptr_num * num_ptr, struct type_list * list);
 struct type * TPtr_proc(struct ptr_num * num_ptr, struct type_list * list);
-struct type * TIdent(char * name);
+struct type * TPtr_T(char * name);
+struct type * TPtr_T_1(struct type * last);
 struct ptr_num * TPtrNil();
 struct ptr_num * TPtr_num();
 struct ptr_num * TPtr_num_1(struct ptr_num * last);
