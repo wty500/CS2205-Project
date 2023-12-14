@@ -133,6 +133,10 @@ struct type * TIdent(char * name){
     return res;
 }
 
+struct ptr_num *TPtrNil() {
+    return NULL;
+}
+
 struct ptr_num *TPtr_num() {
     struct ptr_num *res = new_ptr_num();
     res->num_ptr = 1;
