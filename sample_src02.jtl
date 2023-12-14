@@ -1,5 +1,5 @@
 template<typename T, typename U>
-func T fun(T ab, U b) {
+T fun(T ab, U b) {
   var int(**n)(U, T**);
   var void(*x)();
   var T m;
