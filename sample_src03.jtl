@@ -7,7 +7,7 @@ T fun(T a, U b) {
   }
 };
 
-int main(){
+int main(void(*a)(), int*(**b)(int*,int*)){
   var int a;
   a=read_int();
   var int b;

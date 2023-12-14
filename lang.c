@@ -369,6 +369,29 @@ struct var_list *TVCons(struct type *cur, char *name, struct var_list *next) {
     return res;
 }
 
+struct var_list *TVCons_1(struct type *return_type, struct ptr_num *num_ptr, struct type_list *list, char *name, struct var_list *next) {
+    struct var_list *res = new_var_list_ptr();
+    res->cur = new_type();
+    res->cur->t = T_PTR_FUNC;
+    res->cur->d.PTR_FUNC.num_of_ptr = num_ptr->num_ptr;
+    res->cur->d.PTR_FUNC.arg_list = list;
+    res->cur->d.PTR_FUNC.return_type = return_type;
+    res->name = name;
+    res->next = next;
+    return res;
+}
+
+struct var_list *TVCons_2(struct ptr_num *num_ptr, struct type_list *list, char *name, struct var_list *next) {
+    struct var_list *res = new_var_list_ptr();
+    res->cur = new_type();
+    res->cur->t = T_PTR_PROC;
+    res->cur->d.PTR_PROC.num_of_ptr = num_ptr->num_ptr;
+    res->cur->d.PTR_PROC.arg_list = list;
+    res->name = name;
+    res->next = next;
+    return res;
+}
+
 // struct temp_var_list *TTVNil() {
 //     return NULL;
 // }

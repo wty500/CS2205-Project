@@ -203,6 +203,8 @@ struct cmd * TContinue();
 struct cmd * TReturn();
 struct var_list * TVNil();
 struct var_list * TVCons(struct type * cur, char * name, struct var_list * next);
+struct var_list * TVCons_1(struct type * return_type, struct ptr_num * num_ptr, struct type_list * list, char * name, struct var_list *next);
+struct var_list * TVCons_2(struct ptr_num * num_ptr, struct type_list * list, char * name, struct var_list *next);
 // struct temp_var_list * TTVNil();
 // struct temp_var_list * TTVCons(struct type * cur, char * name, struct temp_var_list * next);
 struct type_name_list * TNLNil();
