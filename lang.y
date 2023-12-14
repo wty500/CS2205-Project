@@ -50,7 +50,8 @@ void * none;
 /* %type <e> NT_P_IDENT // pointer to pointer to ... to ident */
 %type <t> NT_TYPE // int, int*, int** ...... and all kinds of pointer to function
 %type <t> NT_TYPE1 // int, int*, int** ......
-/* %type <t> NT_TYPE2 // T, T*, T** ...... */
+%type <t> NT_intTYPE // T, T*, T** ......
+%type <t> NT_TTYPE
 %type <pn> NT_PTR_NUM // the number of *
 %type <tl> NT_TYPE_LIST
 %type <e> NT_EXPR0
@@ -128,8 +129,19 @@ NT_TYPE: // int, int*, int** ......, T, T*, T** ......, and all kinds of pointer
   }
 ;
 
-NT_TYPE1: // int, int*, int** ......
-  NT_TYPE1 TM_MUL
+NT_TYPE1: // int, int*, int** or T, T*, T** ......
+  NT_intTYPE
+  {
+    $$ = ($1);
+  }
+| NT_TTYPE
+  {
+    $$ = ($1);
+  }
+;
+
+NT_intTYPE:
+  NT_intTYPE TM_MUL
   {
     $$ = (TPtr_int_1($1));
   }
@@ -137,11 +149,19 @@ NT_TYPE1: // int, int*, int** ......
   {
     $$ = (TPtr_int());
   }
+;
+
+NT_TTYPE:
+  NT_TTYPE TM_MUL
+  {
+    $$ = (TPtr_T_1($1));
+  }
 | TM_IDENT
   {
-    $$ = (TIdent($1));
+    $$ = (TPtr_T($1));
   }
 ;
+
 
 NT_VAR_LIST:
   NT_TYPE1 TM_IDENT TM_COMMA NT_VAR_LIST

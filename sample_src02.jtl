@@ -1,8 +1,7 @@
 template<typename T>
-func T fun(T ab, int*** b) {
-  var int(**n)(int, int**);
-  var void(*n)();
-  var int **m;
-  **m = ***n + 1;
-  write_int(**m + 2)
+func T fun(T ab, int b) {
+  var int(**n)(int, T**);
+  var void(*x)();
+  var T m;
+  fun(m,b-1)
 }
