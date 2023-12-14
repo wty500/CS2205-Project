@@ -32,7 +32,7 @@ void * none;
 %token <none> TM_LEFT_PAREN TM_RIGHT_PAREN
 %token <none> TM_SEMICOL TM_COMMA
 %token <none> TM_TEMPLATE TM_TYPENAME
-%token <none> TM_PROC_DEF
+%token <none> TM_VAR TM_FUNC_DEF TM_PROC_DEF
 %token <none> TM_CONTINUE TM_BREAK TM_RETURN
 %token <none> TM_INT TM_IF TM_THEN TM_ELSE TM_WHILE TM_DO TM_FOR
 %token <none> TM_ASGNOP
@@ -43,14 +43,14 @@ void * none;
 %token <none> TM_PLUS TM_MINUS
 %token <none> TM_MUL TM_DIV TM_MOD
 %token <none> TM_UMINUS TM_DEREF TM_ADDR_OF
-%token <none> TM_COL
 
 // Nonterminals
 %type <gil> NT_WHOLE
 %type <c> NT_CMD
-%type <e> NT_P_IDENT // pointer to pointer to ... to ident
+/* %type <e> NT_P_IDENT // pointer to pointer to ... to ident */
 %type <t> NT_TYPE // int, int*, int** ...... and all kinds of pointer to function
 %type <t> NT_TYPE1 // int, int*, int** ......
+/* %type <t> NT_TYPE2 // T, T*, T** ...... */
 %type <pn> NT_PTR_NUM // the number of *
 %type <tl> NT_TYPE_LIST
 %type <e> NT_EXPR0
@@ -117,7 +117,7 @@ NT_TYPE_LIST:
   }
 ;
 
-NT_TYPE: // int, int*, int** ...... and all kinds of pointer to function
+NT_TYPE: // int, int*, int** ......, T, T*, T** ......, and all kinds of pointer to function
   NT_TYPE1
   {
     $$ = ($1);
@@ -128,7 +128,7 @@ NT_TYPE: // int, int*, int** ...... and all kinds of pointer to function
   }
 ;
 
-NT_TYPE1: // int, int*, int** ...... or T, T*, T** ......
+NT_TYPE1: // int, int*, int** ......
   NT_TYPE1 TM_MUL
   {
     $$ = (TPtr_int_1($1));
@@ -137,12 +137,11 @@ NT_TYPE1: // int, int*, int** ...... or T, T*, T** ......
   {
     $$ = (TPtr_int());
   }
-| TM_IDENT TM_COL
+| TM_IDENT
   {
     $$ = (TIdent($1));
   }
 ;
-
 
 NT_VAR_LIST:
   NT_TYPE1 TM_IDENT TM_COMMA NT_VAR_LIST
@@ -197,17 +196,17 @@ NT_TYPENAME_LIST:
 ;
 
 NT_GLOBAL_ITEM:
-  NT_TYPE1 TM_IDENT
+  TM_VAR NT_TYPE1 TM_IDENT
   {
-    $$ = (TGlobVar($1,$2));
+    $$ = (TGlobVar($2,$3));
   }
-| NT_TYPE TM_LEFT_PAREN NT_PTR_NUM TM_IDENT TM_RIGHT_PAREN TM_LEFT_PAREN TM_RIGHT_PAREN
+| TM_VAR NT_TYPE TM_LEFT_PAREN NT_PTR_NUM TM_IDENT TM_RIGHT_PAREN TM_LEFT_PAREN TM_RIGHT_PAREN
   {
-    $$ = (TGlobVar_1($1,$3,TTNil(),$4));
+    $$ = (TGlobVar_1($2,$4,TTNil(),$5));
   }
-| NT_TYPE TM_LEFT_PAREN NT_PTR_NUM TM_IDENT TM_RIGHT_PAREN TM_LEFT_PAREN NT_TYPE_LIST TM_RIGHT_PAREN
+| TM_VAR NT_TYPE TM_LEFT_PAREN NT_PTR_NUM TM_IDENT TM_RIGHT_PAREN TM_LEFT_PAREN NT_TYPE_LIST TM_RIGHT_PAREN
   {
-    $$ = (TGlobVar_1($1,$3,$7,$4));
+    $$ = (TGlobVar_1($2,$4,$8,$5));
   }
 | TM_PROC_DEF TM_LEFT_PAREN NT_PTR_NUM TM_IDENT TM_RIGHT_PAREN TM_LEFT_PAREN TM_RIGHT_PAREN
   {
@@ -217,13 +216,13 @@ NT_GLOBAL_ITEM:
   {
     $$ = (TGlobVar_2($3,$7,$4));
   }
-| TM_TEMPLATE TM_LT NT_TYPENAME_LIST TM_GT NT_TYPE TM_IDENT TM_LEFT_PAREN TM_RIGHT_PAREN TM_LEFT_BRACE NT_CMD TM_RIGHT_BRACE
+| TM_TEMPLATE TM_LT NT_TYPENAME_LIST TM_GT TM_FUNC_DEF NT_TYPE TM_IDENT TM_LEFT_PAREN TM_RIGHT_PAREN TM_LEFT_BRACE NT_CMD TM_RIGHT_BRACE
   {
-    $$ = (TTemFuncDef($3,$5,$6,TVNil(),$10));
+    $$ = (TTemFuncDef($3,$6,$7,TVNil(),$11));
   }
-| TM_TEMPLATE TM_LT NT_TYPENAME_LIST TM_GT NT_TYPE TM_IDENT TM_LEFT_PAREN NT_VAR_LIST TM_RIGHT_PAREN TM_LEFT_BRACE NT_CMD TM_RIGHT_BRACE
+| TM_TEMPLATE TM_LT NT_TYPENAME_LIST TM_GT TM_FUNC_DEF NT_TYPE TM_IDENT TM_LEFT_PAREN NT_VAR_LIST TM_RIGHT_PAREN TM_LEFT_BRACE NT_CMD TM_RIGHT_BRACE
   {
-    $$ = (TTemFuncDef($3,$5,$6,$8,$11));
+    $$ = (TTemFuncDef($3,$6,$7,$9,$12));
   }
 | TM_TEMPLATE TM_LT NT_TYPENAME_LIST TM_GT TM_PROC_DEF TM_IDENT TM_LEFT_PAREN TM_RIGHT_PAREN TM_LEFT_BRACE NT_CMD TM_RIGHT_BRACE
   {
@@ -233,13 +232,13 @@ NT_GLOBAL_ITEM:
   {
     $$ = (TTemProcDef($3,$6,$8,$11));
   }
-| NT_TYPE TM_IDENT TM_LEFT_PAREN TM_RIGHT_PAREN TM_LEFT_BRACE NT_CMD TM_RIGHT_BRACE
+| TM_FUNC_DEF NT_TYPE TM_IDENT TM_LEFT_PAREN TM_RIGHT_PAREN TM_LEFT_BRACE NT_CMD TM_RIGHT_BRACE
   {
-    $$ = (TFuncDef($1,$2,TVNil(),$6));
+    $$ = (TFuncDef($2,$3,TVNil(),$7));
   }
-| NT_TYPE TM_IDENT TM_LEFT_PAREN NT_VAR_LIST TM_RIGHT_PAREN TM_LEFT_BRACE NT_CMD TM_RIGHT_BRACE
+| TM_FUNC_DEF NT_TYPE TM_IDENT TM_LEFT_PAREN NT_VAR_LIST TM_RIGHT_PAREN TM_LEFT_BRACE NT_CMD TM_RIGHT_BRACE
   {
-    $$ = (TFuncDef($1,$2,$4,$7));
+    $$ = (TFuncDef($2,$3,$5,$8));
   }
 | TM_PROC_DEF TM_IDENT TM_LEFT_PAREN TM_RIGHT_PAREN TM_LEFT_BRACE NT_CMD TM_RIGHT_BRACE
   {
@@ -252,25 +251,25 @@ NT_GLOBAL_ITEM:
 ;
 
 NT_CMD:
-   NT_TYPE1 TM_IDENT TM_SEMICOL NT_CMD
+  TM_VAR NT_TYPE1 TM_IDENT TM_SEMICOL NT_CMD
   {
-    $$ = (TDecl($1,$2,$4));
+    $$ = (TDecl($2,$3,$5));
   }
-| NT_TYPE TM_LEFT_PAREN NT_PTR_NUM TM_IDENT TM_RIGHT_PAREN TM_LEFT_PAREN TM_RIGHT_PAREN TM_SEMICOL NT_CMD
+| TM_VAR NT_TYPE TM_LEFT_PAREN NT_PTR_NUM TM_IDENT TM_RIGHT_PAREN TM_LEFT_PAREN TM_RIGHT_PAREN TM_SEMICOL NT_CMD
   {
-    $$ = (TDecl_1($1,$3,TTNil(),$4,$9));
+    $$ = (TDecl_1($2,$4,TTNil(),$5,$10));
   }
-| NT_TYPE TM_LEFT_PAREN NT_PTR_NUM TM_IDENT TM_RIGHT_PAREN TM_LEFT_PAREN NT_TYPE_LIST TM_RIGHT_PAREN TM_SEMICOL NT_CMD
+| TM_VAR NT_TYPE TM_LEFT_PAREN NT_PTR_NUM TM_IDENT TM_RIGHT_PAREN TM_LEFT_PAREN NT_TYPE_LIST TM_RIGHT_PAREN TM_SEMICOL NT_CMD
   {
-    $$ = (TDecl_1($1,$3,$7,$4,$10));
+    $$ = (TDecl_1($2,$4,$8,$5,$11));
   }
-| TM_PROC_DEF TM_LEFT_PAREN NT_PTR_NUM TM_IDENT TM_RIGHT_PAREN TM_LEFT_PAREN TM_RIGHT_PAREN TM_SEMICOL NT_CMD
+| TM_VAR TM_PROC_DEF TM_LEFT_PAREN NT_PTR_NUM TM_IDENT TM_RIGHT_PAREN TM_LEFT_PAREN TM_RIGHT_PAREN TM_SEMICOL NT_CMD
   {
-    $$ = (TDecl_2($3,TTNil(),$4,$9));
+    $$ = (TDecl_2($4,TTNil(),$5,$10));
   }
-| TM_PROC_DEF TM_LEFT_PAREN NT_PTR_NUM TM_IDENT TM_RIGHT_PAREN TM_LEFT_PAREN NT_TYPE_LIST TM_RIGHT_PAREN TM_SEMICOL NT_CMD
+| TM_VAR TM_PROC_DEF TM_LEFT_PAREN NT_PTR_NUM TM_IDENT TM_RIGHT_PAREN TM_LEFT_PAREN NT_TYPE_LIST TM_RIGHT_PAREN TM_SEMICOL NT_CMD
   {
-    $$ = (TDecl_2($3,$7,$4,$10));
+    $$ = (TDecl_2($4,$8,$5,$11));
   }
 | NT_EXPR TM_ASGNOP NT_EXPR
   {
@@ -318,7 +317,7 @@ NT_CMD:
   }
 ;
 
-NT_P_IDENT:
+/* NT_P_IDENT:
   TM_MUL NT_P_IDENT
   {
     $$ = (TPtr($2));
@@ -326,7 +325,7 @@ NT_P_IDENT:
 | TM_IDENT
   {
     $$ = (TVar($1));
-  }
+  } */
 
 NT_EXPR0: // 原子表达式
   TM_NAT

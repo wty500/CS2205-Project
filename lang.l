@@ -40,6 +40,14 @@
     return TM_FOR;
 }
 
+"var" {
+    return TM_VAR;
+}
+
+"func" {
+    return TM_FUNC_DEF;
+}
+
 "void" {
     return TM_PROC_DEF;
 }
@@ -156,9 +164,7 @@
 "&" {
     return TM_ADDR_OF;
 }
-":" {
-    return TM_COL;
-}
+
 [ \t\n\r]    { };
 
 .   {printf("%s",yytext);
