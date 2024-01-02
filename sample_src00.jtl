@@ -1,3 +1,11 @@
+int read_int(){
+   var int __return
+}
+
+int write_int(var int x){
+   var int __return
+}
+
 void main() {
   var int ***n;
   ***n = read_int();

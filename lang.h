@@ -12,7 +12,6 @@ struct decl_var {
     struct type * var_type;
     UT_hash_handle hh;         /* makes this structure hashable */
 };
-struct decl_var *env_vars=NULL;
 
 struct decl_fun{
     bool is_template;
@@ -20,7 +19,6 @@ struct decl_fun{
     struct glob_item *it;
     UT_hash_handle hh; 
 };
-struct decl_fun *env_funs=NULL;
 
 struct decl_proc{
     bool is_template;
@@ -28,10 +26,6 @@ struct decl_proc{
     struct glob_item *it;
     UT_hash_handle hh; 
 };
-struct decl_proc *env_procs=NULL;
-
-
-
 
 enum BinOpType {
   T_PLUS,
@@ -194,7 +188,7 @@ struct instantiated_proc{
 struct instantiated_proc_list{
     struct instantiated_proc * data;
     struct instantiated_proc_list * next;
-} *IPL;
+};
 
 struct instantiated_func{
     struct type * return_type;
@@ -205,7 +199,7 @@ struct instantiated_func{
 struct instantiated_func_list{
     struct instantiated_func * data;
     struct instantiated_func_list * next;
-} *IFL;
+};
 
 struct glob_item_list {
   struct glob_item * data;

@@ -3,6 +3,12 @@
 #include <string.h>
 #include "lang.h"
 
+struct decl_var *env_vars=NULL;
+struct decl_fun *env_funs=NULL;
+struct decl_proc *env_procs=NULL;
+struct instantiated_proc_list *IPL;
+struct instantiated_func_list *IFL;
+
 struct type *new_type() {
     struct type *res = (struct type *) malloc(sizeof(struct type));
     if (res == NULL) {
@@ -1289,6 +1295,7 @@ void print_glob_item(struct glob_item *g) {
             p=(struct decl_proc *)malloc(sizeof(struct decl_proc));
             p->is_template = false;
             p->it = g;
+            p->name = g->d.PROC_DEF.name;
             HASH_ADD_KEYPTR(hh, env_procs, p->name, strlen(p->name), p);
             print_cmd(g->d.PROC_DEF.body,NULL);
             printf("\n\n");
@@ -1427,11 +1434,16 @@ void print_glob_item_list(struct glob_item_list *gs) {
 
 void instantiate_glob_item_list(struct glob_item_list *gs) {
     struct decl_proc *p;
+    for (p = env_procs; p != NULL; p= p->hh.next) {
+        printf("user name: %s\n", p->name);
+    }
     HASH_FIND_STR(env_procs, "main", p);
     if (p == NULL) {
         printf("Error, no main function!\n");
         exit(0);
     }
+    IPL=(struct instantiated_proc_list *)malloc(sizeof(struct instantiated_proc_list));
+    IFL=(struct instantiated_func_list *)malloc(sizeof(struct instantiated_func_list));
     IPL->data = NULL;
     IPL->next = NULL;
     IFL->data = NULL;
