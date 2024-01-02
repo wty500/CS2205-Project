@@ -23,4 +23,7 @@ int main(int argc, char * * argv) {
   yyparse();
   fclose(yyin);
   print_glob_item_list(root);
+  printf("\n\ninstantiation result:\n");
+  instantiate_glob_item_list(root);
+  return 0;
 }

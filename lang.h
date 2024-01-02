@@ -3,7 +3,35 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include "lib.h"
+#include "uthash.h"
+
+struct decl_var {
+    const char *name;          /* key */
+    struct type * var_type;
+    UT_hash_handle hh;         /* makes this structure hashable */
+};
+struct decl_var *env_vars=NULL;
+
+struct decl_fun{
+    bool is_template;
+    const char * name;
+    struct glob_item *it;
+    UT_hash_handle hh; 
+};
+struct decl_fun *env_funs=NULL;
+
+struct decl_proc{
+    bool is_template;
+    const char * name;
+    struct glob_item *it;
+    UT_hash_handle hh; 
+};
+struct decl_proc *env_procs=NULL;
+
+
+
 
 enum BinOpType {
   T_PLUS,
@@ -135,6 +163,7 @@ struct var_list {
 
 struct type_name_list {
   char * name;
+  struct type * inst_type;
   struct type_name_list * next;
 };
 
@@ -151,11 +180,32 @@ struct glob_item {
   union {
     struct {struct type * return_type; char * name; struct var_list * templates; struct var_list * args; struct cmd * body; } FUNC_DEF;
     struct {struct type_name_list* temp_types;struct type * return_type; char * name; struct var_list * templates; struct var_list * args; struct cmd * body; } TEMP_FUNC_DEF;
-    struct {char * name; struct var_list * templates; struct var_list * args; struct cmd * body; } PROC_DEF;
+    struct {char * name; struct var_list * args; struct cmd * body; } PROC_DEF;
     struct {struct type_name_list* temp_types;char * name; struct var_list * templates; struct var_list * args; struct cmd * body; } TEMP_PROC_DEF;
     struct {struct type * var_type; char * name;} GLOB_VAR;
   } d;
 };
+
+struct instantiated_proc{
+    char * name;
+    struct type_name_list * args;
+};
+
+struct instantiated_proc_list{
+    struct instantiated_proc * data;
+    struct instantiated_proc_list * next;
+} *IPL;
+
+struct instantiated_func{
+    struct type * return_type;
+    char * name;
+    struct type_name_list * args;
+};
+
+struct instantiated_func_list{
+    struct instantiated_func * data;
+    struct instantiated_func_list * next;
+} *IFL;
 
 struct glob_item_list {
   struct glob_item * data;
@@ -224,17 +274,24 @@ struct glob_item_list * TGNil();
 struct glob_item_list * TGCons(struct glob_item * data,
                                struct glob_item_list * next);
 
-void print_type(struct type * t);
+void print_type(struct type *t, struct decl_var *tns); 
+bool cmp_type(struct type * t1, struct type * t2);
 void print_type_list(struct type_list * tl);
+bool cmp_type_list(struct type_list * tl1, struct type_list * tl2);
 void print_type_name_list(struct type_name_list * tnl);
 void print_binop(enum BinOpType op);
 void print_unop(enum UnOpType op);
 void print_expr(struct expr * e);
+struct type * instantiate_expr(struct expr *e, struct decl_var *env_typename);
 void print_expr_list(struct expr_list * es);
-void print_cmd(struct cmd * c);
-void print_var_list(struct var_list * vs);
+struct type_name_list * instantiate_fun(struct expr_list *es, struct glob_item* fun, struct decl_var *env_typename);
+void print_cmd(struct cmd *c, struct decl_var *tns);
+void instantiate_cmd(struct cmd * c, struct decl_var *env_typename);
+void print_var_list(struct var_list * vs, struct decl_var *tns);
 // void print_temp_var_list(struct temp_var_list * vs);
 void print_glob_item(struct glob_item * g);
+void instantiate_glob_item(struct glob_item *g, struct type_name_list *tnl);
 void print_glob_item_list(struct glob_item_list * gs);
+void instantiate_glob_item_list(struct glob_item_list *gs);
 
 #endif // LANG_H_INCLUDED

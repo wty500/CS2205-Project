@@ -13,7 +13,7 @@ parser.h: lang.y
 lib.o: lib.c lib.h
 	gcc -c lib.c
 
-lang.o: lang.c lang.h lib.h
+lang.o: lang.c lang.h lib.h uthash.h
 	gcc -c lang.c
 
 parser.o: parser.c parser.h lexer.h lang.h
