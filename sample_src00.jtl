@@ -1,15 +1,11 @@
-int read_int(){
-   var int __return
-}
-
-int write_int(var int x){
-   var int __return
-}
+int read_int() {
+  var int ***n;
+ ***n = read_int()
+};
 
 void main() {
   var int ***n;
   ***n = read_int();
   var int **m;
-  **m = ***n + 1;
-  write_int(**m + 2)
+  **m = ***n + 1
 }
