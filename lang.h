@@ -179,7 +179,7 @@ struct glob_item {
   enum GlobItemType t;
   union {
     struct {struct type * return_type; char * name; struct var_list * templates; struct var_list * args; struct cmd * body; } FUNC_DEF;
-    struct {struct type_name_list* temp_types;struct type * return_type; char * name; struct var_list * templates; struct var_list * args; struct cmd * body; } TEMP_FUNC_DEF;
+    struct {struct type_name_list* temp_types; struct type * return_type; char * name; struct var_list * templates; struct var_list * args; struct cmd * body; } TEMP_FUNC_DEF;
     struct {char * name; struct var_list * args; struct cmd * body; } PROC_DEF;
     struct {struct type_name_list* temp_types;char * name; struct var_list * templates; struct var_list * args; struct cmd * body; } TEMP_PROC_DEF;
     struct {struct type * var_type; char * name;} GLOB_VAR;
@@ -279,6 +279,16 @@ bool cmp_type(struct type * t1, struct type * t2);
 void print_type_list(struct type_list * tl);
 bool cmp_type_list(struct type_list * tl1, struct type_list * tl2);
 void print_type_name_list(struct type_name_list * tnl);
+
+
+bool cmp_type_name_list(struct type_name_list * tnl1, struct type_name_list * tnl2);
+struct type * instantiate_binop(enum BinOpType op, struct type * t1, struct type * t2);
+struct type * instantiate_unop(enum UnOpType op, struct type * t);
+struct type * instantiate_deref(struct type * t);
+struct type * instantiate_addr_of(struct type * t);
+struct type_name_list * instantiate_proc(struct expr_list * el, struct glob_item * gi, struct decl_var * dv);
+
+
 void print_binop(enum BinOpType op);
 void print_unop(enum UnOpType op);
 void print_expr(struct expr * e);

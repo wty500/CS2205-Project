@@ -661,6 +661,16 @@ bool cmp_type_list(struct type_list * tl1, struct type_list * tl2){
     return cmp_type(tl1->data, tl2->data) && cmp_type_list(tl1->next, tl2->next);
 }
 
+bool cmp_type_name_list(struct type_name_list * tnl1, struct type_name_list * tnl2){
+    if(tnl1 == NULL && tnl2 == NULL){
+        return true;
+    }
+    if(tnl1 == NULL || tnl2 == NULL){
+        return false;
+    }
+    return cmp_type(tnl1->inst_type, tnl2->inst_type) && strcmp(tnl1->name, tnl2->name) == 0 && cmp_type_name_list(tnl1->next, tnl2->next);
+}
+
 void _print_type_list(struct type_list *tl) {
     if (tl == NULL) {
         return;
@@ -740,20 +750,161 @@ void print_expr(struct expr *e) {
     }
 }
 
+struct type * instantiate_binop(enum BinOpType op, struct type * t1, struct type * t2) {
+    switch (op) {
+        case T_PLUS:
+        case T_MINUS:
+        case T_MUL:
+        case T_DIV:
+        case T_MOD:
+            if (cmp_type(t1, t2)) {
+                return t1;
+            }
+            else if (t1->t == 0 && t1->d.PTR_INT.num_of_ptr == 0) {
+                return t2;
+            }
+            else if (t2->t == 0 && t2->d.PTR_INT.num_of_ptr == 0) {
+                return t1;
+            }
+            else {
+                printf("Error when instantiating the type of ");
+                print_type(t1, NULL);
+                printf(" \'some binop\' ");
+                print_type(t2, NULL);
+                exit(0);
+            }
+        case T_AND:
+        case T_OR:
+        case T_EQ:
+        case T_NE:
+            return TPtr_int();
+        case T_GE:
+        case T_GT:
+        case T_LE:
+        case T_LT:
+            if (cmp_type(t1, t2)) {
+                return TPtr_int();
+            }
+            else if (t1->t == 0 && t1->d.PTR_INT.num_of_ptr == 0) {
+                return TPtr_int();
+            }
+            else if (t2->t == 0 && t2->d.PTR_INT.num_of_ptr == 0) {
+                return TPtr_int();
+            }
+            else {
+                printf("Error when instantiating the type of ");
+                print_type(t1, NULL);
+                printf(" \'some binop\' ");
+                print_type(t2, NULL);
+                exit(0);
+            }
+    }
+}
+
+struct type * instantiate_unop(enum UnOpType op, struct type * t) {
+    switch (op) {
+        case T_UMINUS:
+            return t;
+        case T_NOT:
+            return TPtr_int();
+    }
+}
+
+struct type * instantiate_deref(struct type * t) {
+    switch (t->t) {
+        case T_PTR_INT:
+            if (t->d.PTR_INT.num_of_ptr > 0) {
+                t->d.PTR_INT.num_of_ptr -= 1;
+                return t;
+            }
+            else {
+                printf("Error when instantiating the type of deref of ");
+                print_type(t, NULL);
+                exit(0);
+            }
+        case T_PTR_FUNC:
+            if (t->d.PTR_FUNC.num_of_ptr > 0) {
+                t->d.PTR_FUNC.num_of_ptr -= 1;
+                return t;
+            }
+            else {
+                printf("Error when instantiating the type of deref of ");
+                print_type(t, NULL);
+                exit(0);
+            }
+        case T_PTR_PROC:
+            if (t->d.PTR_PROC.num_of_ptr > 0) {
+                t->d.PTR_PROC.num_of_ptr -= 1;
+                return t;
+            }
+            else {
+                printf("Error when instantiating the type of deref of ");
+                print_type(t, NULL);
+                exit(0);
+            }
+    }
+}
+
+struct type * instantiate_addr_of(struct type * t) {
+    switch (t->t) {
+        case T_PTR_INT:
+            t->d.PTR_INT.num_of_ptr += 1;
+            return t;
+        case T_PTR_FUNC:
+            t->d.PTR_FUNC.num_of_ptr += 1;
+            return t;
+        case T_PTR_PROC:
+            t->d.PTR_PROC.num_of_ptr += 1;
+    }
+}
+
+struct type_name_list * instantiate_proc(struct expr_list * es, struct glob_item * proc, struct decl_var * env_typename) {
+    if (es == NULL || proc->t!=T_TEMP_PROC_DEF) {
+        return NULL;
+    }
+    struct type_name_list * head = malloc(sizeof(struct type_name_list)), *tail = head;
+
+    for(struct type_name_list * tnl_it = proc->d.TEMP_PROC_DEF.temp_types; tnl_it != NULL; tnl_it = tnl_it->next) {
+        bool flag = false; //false表示当前模板还未匹配到类型
+        for (struct var_list * it = proc->d.TEMP_PROC_DEF.args; it != NULL; it = it->next) {
+            if (it->cur->t == T_TEMPLATE_TYPE && strcmp(it->cur->d.TEMPLATE_TYPE.typename, tnl_it->name) == 0) {
+                struct type * t1 = instantiate_expr(es->data, env_typename);
+                if (!flag) {
+                    flag = true;
+                    tail->inst_type = t1;
+                    tail->name = tnl_it->name;
+                    tail->next = malloc(sizeof(struct type_name_list));
+                    tail = tail->next;
+                }
+                else {
+                    for (struct type_name_list *tnl_it_1 = head; tnl_it_1 != tail->next; tnl_it_1 = tnl_it_1->next) {
+                        if (strcmp(tnl_it_1->name, tnl_it->name) == 0 && !cmp_type(tnl_it_1->inst_type, t1)) {
+                            printf("Error when instantiating the process %s\n", proc->d.TEMP_PROC_DEF.name);
+                            exit(0);
+                        }
+                    }
+                }
+            }
+            es = es->next;
+        }
+    }
+    return head;
+}
+
 struct type * instantiate_expr(struct expr *e, struct decl_var *env_typename){
     switch (e->t) {
         case T_CONST:
             return TPtr_int();
-        case T_VAR:
-            struct decl_var * s;
+        case T_VAR: {
+            struct decl_var *s;
             HASH_FIND_STR(env_vars, e->d.VAR.name, s);
-            if(s){
+            if (s) {
                 return s->var_type;
-            }
-            else{
+            } else {
                 printf("Error when instantiating the type of %s\n", e->d.VAR.name);
                 exit(0);
             }
+        }
         case T_PTR:
             return TPtr_int_1(instantiate_expr(e->d.PTR.arg, env_typename));
         case T_BINOP:
@@ -764,47 +915,47 @@ struct type * instantiate_expr(struct expr *e, struct decl_var *env_typename){
             return instantiate_deref(instantiate_expr(e->d.DEREF.arg, env_typename));
         case T_ADDR_OF:
             return instantiate_addr_of(instantiate_expr(e->d.ADDR_OF.arg, env_typename));
-        case T_FUNC:
+        case T_FUNC: {
             struct decl_fun *f;
             HASH_FIND_STR(env_funs, e->d.FUNC.name, f);
-            if(f){
-                struct type_name_list * inst_args = instantiate_fun(e->d.FUNC.args,f->it, env_typename);
+            if (f) {
+                struct type_name_list *inst_args = instantiate_fun(e->d.FUNC.args, f->it, env_typename);
                 struct instantiated_func_list *list_it;
-                for(list_it=IFL;list_it!=NULL;list_it=list_it->next){
-                    if(strcmp(list_it->data->name, e->d.FUNC.name)==0){
-                        if(cmp_type_name_list(list_it->data->args, inst_args)){
+                for (list_it = IFL; list_it != NULL; list_it = list_it->next) {
+                    if (strcmp(list_it->data->name, e->d.FUNC.name) == 0) {
+                        if (cmp_type_name_list(list_it->data->args, inst_args)) {
                             return list_it->data->return_type;
                         }
                     }
                 }
-                struct instantiated_func_list *new_func_it = (struct instantiated_func_list *)malloc(sizeof(struct instantiated_func_list));
+                struct instantiated_func_list *new_func_it = (struct instantiated_func_list *) malloc(
+                        sizeof(struct instantiated_func_list));
                 new_func_it->next = NULL;
-                struct instantiated_func *new_func = (struct instantiated_func *)malloc(sizeof(struct instantiated_func));
+                struct instantiated_func *new_func = (struct instantiated_func *) malloc(
+                        sizeof(struct instantiated_func));
                 new_func->name = e->d.FUNC.name;
                 new_func->args = inst_args;
-                if(f->is_template&&f->it->d.TEMP_FUNC_DEF.return_type->t==T_TEMPLATE_TYPE){
-                    struct decl_var *realt=NULL;
-                    HASH_FIND_STR(env_typename, f->it->d.TEMP_FUNC_DEF.return_type->d.TEMPLATE_TYPE.typename, realt); 
-                    if(realt){
+                if (f->is_template && f->it->d.TEMP_FUNC_DEF.return_type->t == T_TEMPLATE_TYPE) {
+                    struct decl_var *realt = NULL;
+                    HASH_FIND_STR(env_typename, f->it->d.TEMP_FUNC_DEF.return_type->d.TEMPLATE_TYPE.typename, realt);
+                    if (realt) {
                         new_func->return_type = realt->var_type;
-                    }
-                    else{
+                    } else {
                         printf("Error when instantiating the type of %s\n", e->d.FUNC.name);
                         exit(0);
                     }
-                }
-                else{
+                } else {
                     new_func->return_type = f->it->d.FUNC_DEF.return_type;
                 }
                 new_func_it->data = new_func;
                 list_it->next = new_func_it;
                 instantiate_glob_item(f->it, inst_args);
                 return new_func->return_type;
-            }
-            else{
+            } else {
                 printf("Error when instantiating the type of %s\n", e->d.FUNC.name);
                 exit(0);
             }
+        }
     }
 }
 
@@ -822,9 +973,29 @@ struct type_name_list * instantiate_fun(struct expr_list *es, struct glob_item* 
         return NULL;
     }
     struct type_name_list * head = malloc(sizeof(struct type_name_list)), *tail = head;
-    for(struct var_list * it = fun->d.TEMP_FUNC_DEF.args; it!=NULL; it=it->next){
-        if(it->cur->t==T_TEMPLATE_TYPE){
-            // TODO
+
+    for(struct type_name_list * tnl_it = fun->d.TEMP_FUNC_DEF.temp_types; tnl_it != NULL; tnl_it = tnl_it->next) {
+        bool flag = false; //false表示当前模板还未匹配到类型
+        for (struct var_list * it = fun->d.TEMP_FUNC_DEF.args; it != NULL; it = it->next) {
+            if (it->cur->t == T_TEMPLATE_TYPE && strcmp(it->cur->d.TEMPLATE_TYPE.typename, tnl_it->name) == 0) {
+                struct type * t1 = instantiate_expr(es->data, env_typename);
+                if (!flag) {
+                    flag = true;
+                    tail->inst_type = t1;
+                    tail->name = tnl_it->name;
+                    tail->next = malloc(sizeof(struct type_name_list));
+                    tail = tail->next;
+                }
+                else {
+                    for (struct type_name_list *tnl_it_1 = head; tnl_it_1 != tail->next; tnl_it_1 = tnl_it_1->next) {
+                        if (strcmp(tnl_it_1->name, tnl_it->name) == 0 && !cmp_type(tnl_it_1->inst_type, t1)) {
+                            printf("Error when instantiating the function %s\n", fun->d.TEMP_FUNC_DEF.name);
+                            exit(0);
+                        }
+                    }
+                }
+            }
+            es = es->next;
         }
     }
     return head;
@@ -936,26 +1107,25 @@ void print_cmd(struct cmd *c, struct decl_var *tns) {
 
 void instantiate_cmd(struct cmd * c, struct decl_var *env_typename){
     switch (c->t) {
-        case T_DECL:
-            struct decl_var *realt=NULL;
-            if(c->d.DECL.type->t==T_TEMPLATE_TYPE){
-                HASH_FIND_STR(env_typename, c->d.DECL.type->d.TEMPLATE_TYPE.typename, realt); 
+        case T_DECL: {
+            struct decl_var *realt = NULL;
+            if (c->d.DECL.type->t == T_TEMPLATE_TYPE) {
+                HASH_FIND_STR(env_typename, c->d.DECL.type->d.TEMPLATE_TYPE.typename, realt);
             }
-            struct decl_var * s;
+            struct decl_var *s;
             HASH_FIND_STR(env_vars, c->d.DECL.name, s);
-            if(s){
-                struct type * t = s->var_type;
-                if(realt)
+            if (s) {
+                struct type *t = s->var_type;
+                if (realt)
                     s->var_type = realt->var_type;
                 else
                     s->var_type = c->d.DECL.type;
                 instantiate_cmd(c->d.DECL.body, env_typename);
                 s->var_type = t;
-            }
-            else{
-                s=(struct decl_var *)malloc(sizeof(struct decl_var));
+            } else {
+                s = (struct decl_var *) malloc(sizeof(struct decl_var));
                 s->name = c->d.DECL.name;
-                if(realt)
+                if (realt)
                     s->var_type = realt->var_type;
                 else
                     s->var_type = c->d.DECL.type;
@@ -964,6 +1134,7 @@ void instantiate_cmd(struct cmd * c, struct decl_var *env_typename){
                 HASH_DEL(env_vars, s);
                 free(s);
             }
+        }
             break;
         case T_ASGN:
             instantiate_expr(c->d.ASGN.left, env_typename);
@@ -992,22 +1163,22 @@ void instantiate_cmd(struct cmd * c, struct decl_var *env_typename){
             instantiate_cmd(c->d.DO_WHILE.body, env_typename);
             instantiate_expr(c->d.DO_WHILE.cond, env_typename);
             break;
-        case T_PROC:
-            struct decl_proc * p;
+        case T_PROC: {
+            struct decl_proc *p;
             HASH_FIND_STR(env_procs, c->d.PROC.name, p);
-            if(p){
-                struct type_name_list * inst_args = instantiate_proc(c->d.PROC.args,p->it, env_typename);
+            if (p) {
+                struct type_name_list *inst_args = instantiate_proc(c->d.PROC.args, p->it, env_typename);
                 struct instantiated_proc_list *list_it;
-                bool flag=0;
-                for(list_it=IPL;list_it!=NULL;list_it=list_it->next){
-                    if(strcmp(list_it->data->name, c->d.PROC.name)==0){
-                        if(cmp_type_name_list(list_it->data->args, inst_args)){
-                            flag=1;
+                bool flag = 0;
+                for (list_it = IPL; list_it != NULL; list_it = list_it->next) {
+                    if (strcmp(list_it->data->name, c->d.PROC.name) == 0) {
+                        if (cmp_type_name_list(list_it->data->args, inst_args)) {
+                            flag = 1;
                             break;
                         }
                     }
                 }
-                if(flag)break;
+                if (flag)break;
                 struct instantiated_proc_list *new_list_it = malloc(sizeof(struct instantiated_proc_list));
                 new_list_it->next = NULL;
                 struct instantiated_proc *new_data = malloc(sizeof(struct instantiated_proc));
@@ -1016,11 +1187,11 @@ void instantiate_cmd(struct cmd * c, struct decl_var *env_typename){
                 new_list_it->data = new_data;
                 list_it->next = new_list_it;
                 instantiate_glob_item(p->it, inst_args);
-            }
-            else{
+            } else {
                 printf("\nError: procedure %s not declared\n\n", c->d.PROC.name);
                 exit(0);
             }
+        }
             break;
         case T_BREAK:
             break;
@@ -1167,64 +1338,71 @@ void instantiate_glob_item(struct glob_item *g, struct type_name_list *tnl){
         case T_FUNC_DEF:
             instantiate_cmd(g->d.FUNC_DEF.body, NULL);
             return;
-        case T_TEMP_FUNC_DEF:
-            struct decl_var *tns=NULL;
-            for(struct type_name_list* it=tnl;it!=NULL;it=it->next){
-                if(it->inst_type==NULL){
-                    printf("Error: template type %s not instantiated in function %s\n", it->name, g->d.TEMP_FUNC_DEF.name);
+        case T_TEMP_FUNC_DEF:{
+            struct decl_var *tns = NULL;
+            for (struct type_name_list *it = tnl; it != NULL; it = it->next) {
+                if (it->inst_type == NULL) {
+                    printf("Error: template type %s not instantiated in function %s\n", it->name,
+                           g->d.TEMP_FUNC_DEF.name);
                     exit(0);
                 }
                 struct decl_var *tn;
                 HASH_FIND_STR(tns, it->name, tn);
-                if(tn){
-                    printf("Error: redeclaration of template type %s in function %s\n", it->name, g->d.TEMP_FUNC_DEF.name);
+                if (tn) {
+                    printf("Error: redeclaration of template type %s in function %s\n", it->name,
+                           g->d.TEMP_FUNC_DEF.name);
                     exit(0);
                 }
-                tn=(struct decl_var *)malloc(sizeof(struct decl_var));
+                tn = (struct decl_var *) malloc(sizeof(struct decl_var));
                 tn->name = it->name;
                 tn->var_type = it->inst_type;
                 HASH_ADD_KEYPTR(hh, tns, tn->name, strlen(tn->name), tn);
             }
-            for(struct instantiated_func_list* ifl = IFL; ifl!=NULL; ifl=ifl->next){
-                if(strcmp(ifl->data->name, g->d.TEMP_FUNC_DEF.name)==0){
-                    for(struct type_name_list* it1=ifl->data->args,*it2=tnl;it1!=NULL&&it2!=NULL;it1=it1->next,it2=it2->next){
-                        if(!cmp_type(it1->inst_type, it2->inst_type)){
+            for (struct instantiated_func_list *ifl = IFL; ifl != NULL; ifl = ifl->next) {
+                if (strcmp(ifl->data->name, g->d.TEMP_FUNC_DEF.name) == 0) {
+                    for (struct type_name_list *it1 = ifl->data->args, *it2 = tnl;
+                         it1 != NULL && it2 != NULL; it1 = it1->next, it2 = it2->next) {
+                        if (!cmp_type(it1->inst_type, it2->inst_type)) {
                             instantiate_cmd(g->d.TEMP_FUNC_DEF.body, tns);
                             return;
                         }
                     }
                 }
             }
+        }
             return;
         case T_PROC_DEF:
             instantiate_cmd(g->d.PROC_DEF.body, NULL);
             return;
-        case T_TEMP_PROC_DEF:
-            struct decl_var *tns1=NULL;
-            for(struct type_name_list* it=tnl;it!=NULL;it=it->next){
-                if(it->inst_type==NULL){
-                    printf("Error: template type %s not instantiated in procedure %s\n", it->name, g->d.TEMP_PROC_DEF.name);
+        case T_TEMP_PROC_DEF:{
+            struct decl_var *tns1 = NULL;
+            for (struct type_name_list *it = tnl; it != NULL; it = it->next) {
+                if (it->inst_type == NULL) {
+                    printf("Error: template type %s not instantiated in procedure %s\n", it->name,
+                           g->d.TEMP_PROC_DEF.name);
                     exit(0);
                 }
                 struct decl_var *tn;
                 HASH_FIND_STR(tns1, it->name, tn);
-                if(tn){
-                    printf("Error: redeclaration of template type %s in procedure %s\n", it->name, g->d.TEMP_PROC_DEF.name);
+                if (tn) {
+                    printf("Error: redeclaration of template type %s in procedure %s\n", it->name,
+                           g->d.TEMP_PROC_DEF.name);
                     exit(0);
                 }
-                tn=(struct decl_var *)malloc(sizeof(struct decl_var));
+                tn = (struct decl_var *) malloc(sizeof(struct decl_var));
                 tn->name = it->name;
                 tn->var_type = it->inst_type;
                 HASH_ADD_KEYPTR(hh, tns1, tn->name, strlen(tn->name), tn);
             }
-            for(struct instantiated_proc_list* ipl = IPL; ipl!=NULL; ipl=ipl->next){
-                if(strcmp(ipl->data->name, g->d.TEMP_PROC_DEF.name)==0){
-                    for(struct type_name_list* it1=ipl->data->args,*it2=tnl;it1!=NULL&&it2!=NULL;it1=it1->next,it2=it2->next){
-                        if(!cmp_type(it1->inst_type, it2->inst_type)){
+            for (struct instantiated_proc_list *ipl = IPL; ipl != NULL; ipl = ipl->next) {
+                if (strcmp(ipl->data->name, g->d.TEMP_PROC_DEF.name) == 0) {
+                    for (struct type_name_list *it1 = ipl->data->args, *it2 = tnl;
+                         it1 != NULL && it2 != NULL; it1 = it1->next, it2 = it2->next) {
+                        if (!cmp_type(it1->inst_type, it2->inst_type)) {
                             printf(" %s(", g->d.TEMP_PROC_DEF.name);
-                            print_var_list(g->d.TEMP_PROC_DEF.args,tns1);
+                            print_var_list(g->d.TEMP_PROC_DEF.args, tns1);
                             printf(")\n  ");
-                            print_cmd(g->d.TEMP_PROC_DEF.body,tns1);
+                            print_cmd(g->d.TEMP_PROC_DEF.body, tns1);
                             printf("\n\n");
                             instantiate_cmd(g->d.TEMP_PROC_DEF.body, tns1);
                             return;
@@ -1232,6 +1410,7 @@ void instantiate_glob_item(struct glob_item *g, struct type_name_list *tnl){
                     }
                 }
             }
+        }
             return;
         case T_GLOB_VAR:
             return;
