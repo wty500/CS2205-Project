@@ -983,7 +983,10 @@ struct type * instantiate_expr(struct expr *e, struct decl_var *env_typename){
                     new_func->return_type = f->it->d.FUNC_DEF.return_type;
                 }
                 new_func_it->data = new_func;
-                list_it->next = new_func_it;
+                if (list_it == NULL) {
+                    IFL = new_func_it;
+                } else
+                    list_it->next = new_func_it;
                 instantiate_glob_item(f->it, inst_args);
                 return new_func->return_type;
             } else {
@@ -1220,7 +1223,10 @@ void instantiate_cmd(struct cmd * c, struct decl_var *env_typename){
                 new_data->name = c->d.PROC.name;
                 new_data->args = inst_args;
                 new_list_it->data = new_data;
-                list_it->next = new_list_it;
+                if (list_it == NULL) {
+                    IPL = new_list_it;
+                } else
+                    list_it->next = new_list_it;
                 instantiate_glob_item(p->it, inst_args);
             } else {
                 printf("\nError11: procedure %s not declared\n\n", c->d.PROC.name);
@@ -1477,25 +1483,21 @@ void instantiate_glob_item_list(struct glob_item_list *gs) {
         printf("Error21: no main function!\n");
         exit(0);
     }
-    IPL=(struct instantiated_proc_list *)malloc(sizeof(struct instantiated_proc_list));
-    IFL=(struct instantiated_func_list *)malloc(sizeof(struct instantiated_func_list));
-    IPL->data = NULL;
-    IPL->next = NULL;
-    IFL->data = NULL;
-    IFL->next = NULL;
-
+    IPL=NULL;
+    IFL=NULL;
+    instantiate_glob_item(p->it, NULL);
     //modify here
-    for(struct glob_item_list * gil = gs; gil != NULL; gil = gil->next) {
-        if (gil->data->t == T_TEMP_PROC_DEF) {
-            instantiate_glob_item(gil->data, gil->data->d.TEMP_PROC_DEF.temp_types);
-        }
-        else if (gil->data->t == T_TEMP_FUNC_DEF) {
-            instantiate_glob_item(gil->data, gil->data->d.TEMP_FUNC_DEF.temp_types);
-        }
-        else {
-            instantiate_glob_item(gil->data, NULL);
-        }
-    }
+//    for(struct glob_item_list * gil = gs; gil != NULL; gil = gil->next) {
+//        if (gil->data->t == T_TEMP_PROC_DEF) {
+//            instantiate_glob_item(gil->data, gil->data->d.TEMP_PROC_DEF.temp_types);
+//        }
+//        else if (gil->data->t == T_TEMP_FUNC_DEF) {
+//            instantiate_glob_item(gil->data, gil->data->d.TEMP_FUNC_DEF.temp_types);
+//        }
+//        else {
+//            instantiate_glob_item(gil->data, NULL);
+//        }
+//    }
 
     for(struct instantiated_proc_list* ipl = IPL; ipl!=NULL; ipl=ipl->next){
         struct decl_proc *f;

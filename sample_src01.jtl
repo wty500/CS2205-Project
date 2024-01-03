@@ -1,10 +1,8 @@
 var int*(**n)(int(*)(int, int**), int**);
 
-var void(**p)(int, int**);
-
 var void(**p)();
 
-int(*)(int, int**) main(int** a, int*** b) {
+void main(int** a, int*** b) {
   var int(**n)(int, int**);
   var int **m;
   **m = ***n + 1;
