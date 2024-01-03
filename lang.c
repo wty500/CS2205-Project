@@ -983,10 +983,9 @@ struct type * instantiate_expr(struct expr *e, struct decl_var *env_typename){
                     new_func->return_type = f->it->d.FUNC_DEF.return_type;
                 }
                 new_func_it->data = new_func;
-                if (list_it == NULL) {
-                    IFL = new_func_it;
-                } else
-                    list_it->next = new_func_it;
+                list_it=IFL;
+                IFL = new_func_it;
+                IFL->next = list_it;
                 instantiate_glob_item(f->it, inst_args);
                 return new_func->return_type;
             } else {
@@ -1223,10 +1222,9 @@ void instantiate_cmd(struct cmd * c, struct decl_var *env_typename){
                 new_data->name = c->d.PROC.name;
                 new_data->args = inst_args;
                 new_list_it->data = new_data;
-                if (list_it == NULL) {
-                    IPL = new_list_it;
-                } else
-                    list_it->next = new_list_it;
+                list_it=IPL;
+                IPL = new_list_it;
+                IPL->next = list_it;
                 instantiate_glob_item(p->it, inst_args);
             } else {
                 printf("\nError11: procedure %s not declared\n\n", c->d.PROC.name);
