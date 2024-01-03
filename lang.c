@@ -764,13 +764,22 @@ struct type * instantiate_binop(enum BinOpType op, struct type * t1, struct type
         case T_DIV:
         case T_MOD:
             if (cmp_type(t1, t2)) {
-                return t1;
+                struct type *t = (struct type *) malloc(sizeof(struct type));
+                t->t = t1->t;
+                t->d = t1->d;
+                return t;
             }
             else if (t1->t == 0 && t1->d.PTR_INT.num_of_ptr == 0) {
-                return t2;
+                struct type *t = (struct type *) malloc(sizeof(struct type));
+                t->t = t2->t;
+                t->d = t2->d;
+                return t;
             }
             else if (t2->t == 0 && t2->d.PTR_INT.num_of_ptr == 0) {
-                return t1;
+                struct type *t = (struct type *) malloc(sizeof(struct type));
+                t->t = t1->t;
+                t->d = t1->d;
+                return t;
             }
             else {
                 printf("Error1 when instantiating the type of ");
@@ -809,8 +818,12 @@ struct type * instantiate_binop(enum BinOpType op, struct type * t1, struct type
 
 struct type * instantiate_unop(enum UnOpType op, struct type * t) {
     switch (op) {
-        case T_UMINUS:
-            return t;
+        case T_UMINUS: {
+            struct type *t1 = (struct type *) malloc(sizeof(struct type));
+            t1->t = t->t;
+            t1->d = t1->d;
+            return t1;
+        }
         case T_NOT:
             return TPtr_int();
     }
@@ -820,8 +833,10 @@ struct type * instantiate_deref(struct type * t) {
     switch (t->t) {
         case T_PTR_INT:
             if (t->d.PTR_INT.num_of_ptr > 0) {
-                t->d.PTR_INT.num_of_ptr -= 1;
-                return t;
+                struct type * t1 = (struct type *) malloc(sizeof(struct type));
+                t1->t = 0;
+                t1->d.PTR_INT.num_of_ptr = t->d.PTR_INT.num_of_ptr - 1;
+                return t1;
             }
             else {
                 printf("Error3 when instantiating the type of deref of ");
@@ -830,8 +845,10 @@ struct type * instantiate_deref(struct type * t) {
             }
         case T_PTR_FUNC:
             if (t->d.PTR_FUNC.num_of_ptr > 0) {
-                t->d.PTR_FUNC.num_of_ptr -= 1;
-                return t;
+                struct type * t1 = (struct type *) malloc(sizeof(struct type));
+                t1->t = 1;
+                t1->d.PTR_FUNC.num_of_ptr = t->d.PTR_FUNC.num_of_ptr - 1;
+                return t1;
             }
             else {
                 printf("Error4 when instantiating the type of deref of ");
@@ -840,8 +857,10 @@ struct type * instantiate_deref(struct type * t) {
             }
         case T_PTR_PROC:
             if (t->d.PTR_PROC.num_of_ptr > 0) {
-                t->d.PTR_PROC.num_of_ptr -= 1;
-                return t;
+                struct type * t1 = (struct type *) malloc(sizeof(struct type));
+                t1->t = 2;
+                t1->d.PTR_PROC.num_of_ptr = t->d.PTR_PROC.num_of_ptr - 1;
+                return t1;
             }
             else {
                 printf("Error5 when instantiating the type of deref of ");
@@ -853,14 +872,24 @@ struct type * instantiate_deref(struct type * t) {
 
 struct type * instantiate_addr_of(struct type * t) {
     switch (t->t) {
-        case T_PTR_INT:
-            t->d.PTR_INT.num_of_ptr += 1;
-            return t;
-        case T_PTR_FUNC:
-            t->d.PTR_FUNC.num_of_ptr += 1;
-            return t;
-        case T_PTR_PROC:
-            t->d.PTR_PROC.num_of_ptr += 1;
+        case T_PTR_INT: {
+            struct type *t1 = (struct type *) malloc(sizeof(struct type));
+            t1->t = 0;
+            t1->d.PTR_INT.num_of_ptr = t->d.PTR_INT.num_of_ptr + 1;
+            return t1;
+        }
+        case T_PTR_FUNC: {
+            struct type *t1 = (struct type *) malloc(sizeof(struct type));
+            t1->t = 1;
+            t1->d.PTR_FUNC.num_of_ptr = t->d.PTR_FUNC.num_of_ptr + 1;
+            return t1;
+        }
+        case T_PTR_PROC: {
+            struct type *t1 = (struct type *) malloc(sizeof(struct type));
+            t1->t = 2;
+            t1->d.PTR_PROC.num_of_ptr = t->d.PTR_PROC.num_of_ptr + 1;
+            return t1;
+        }
     }
 }
 
@@ -1454,7 +1483,20 @@ void instantiate_glob_item_list(struct glob_item_list *gs) {
     IPL->next = NULL;
     IFL->data = NULL;
     IFL->next = NULL;
-    instantiate_glob_item(p->it, NULL);
+
+    //modify here
+    for(struct glob_item_list * gil = gs; gil != NULL; gil = gil->next) {
+        if (gil->data->t == T_TEMP_PROC_DEF) {
+            instantiate_glob_item(gil->data, gil->data->d.TEMP_PROC_DEF.temp_types);
+        }
+        else if (gil->data->t == T_TEMP_FUNC_DEF) {
+            instantiate_glob_item(gil->data, gil->data->d.TEMP_FUNC_DEF.temp_types);
+        }
+        else {
+            instantiate_glob_item(gil->data, NULL);
+        }
+    }
+
     for(struct instantiated_proc_list* ipl = IPL; ipl!=NULL; ipl=ipl->next){
         struct decl_proc *f;
         HASH_FIND_STR(env_procs, ipl->data->name, f);

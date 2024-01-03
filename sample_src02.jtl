@@ -4,4 +4,11 @@ T fun(T ab, U b) {
   var void(*x)();
   var T m;
   fun(m,b-1)
+};
+
+void main() {
+  var int m;
+  var int n;
+  var int k;
+  k = fun(m, n)
 }
