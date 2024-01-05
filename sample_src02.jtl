@@ -1,9 +1,9 @@
 template<typename T, typename U>
-T fun(T ab, U b) {
+T fun(int(*a)(T), U b) {
   var int(**n)(U, T**);
   var void(*x)();
   var T m;
-  fun(m,b-1)
+  m = m + 1
 };
 
 void main() {
