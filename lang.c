@@ -1086,7 +1086,7 @@ struct type * ins_return_type(struct type * t, struct decl_var * env_typename) {
     switch (t->t) {
         case T_PTR_INT:
             return t;
-        case T_PTR_FUNC:
+        case T_PTR_FUNC: {
             struct type *res = (struct type *) malloc(sizeof(struct type));
             res->t = T_PTR_FUNC;
             res->d.PTR_FUNC.num_of_ptr = t->d.PTR_FUNC.num_of_ptr;
@@ -1096,7 +1096,8 @@ struct type * ins_return_type(struct type * t, struct decl_var * env_typename) {
             // struct ptr_num *num_ptr = (struct ptr_num *) malloc(sizeof(struct ptr_num));
             // num_ptr->num_ptr = t->d.PTR_FUNC.num_of_ptr;
             // return TPtr_func(ins_return_type(t->d.PTR_FUNC.return_type, num_ptr, env_typename), , ins_return_type_list(t->d.PTR_FUNC.arg_list, env_typename));
-        case T_PTR_PROC:
+        }
+        case T_PTR_PROC: {
             struct type *res1 = (struct type *) malloc(sizeof(struct type));
             res1->t = T_PTR_PROC;
             res1->d.PTR_PROC.num_of_ptr = t->d.PTR_PROC.num_of_ptr;
@@ -1105,6 +1106,7 @@ struct type * ins_return_type(struct type * t, struct decl_var * env_typename) {
             // struct ptr_num *num_ptr = (struct ptr_num *) malloc(sizeof(struct ptr_num));
             // num_ptr->num_ptr = t->d.PTR_PROC.num_of_ptr;
             // return TPtr_proc(num_ptr, ins_return_type(t->d.PTR_PROC.arg_list, env_typename));
+        }
         case T_TEMPLATE_TYPE: {
             struct decl_var *s;
             HASH_FIND_STR(env_typename, t->d.TEMPLATE_TYPE.typename, s);
@@ -1617,16 +1619,15 @@ void ins_cmd(struct cmd * c, struct decl_var *env_typename){
             }
         }
             break;
-        case T_ASGN:
+        case T_ASGN: {
             struct type *t1 = ins_expr(c->d.ASGN.left, env_typename);
             struct type *t2 = ins_expr(c->d.ASGN.right, env_typename);
-            if(t1->t!=t2->t){
-                if(t2->t==T_PTR_INT&&t2->d.PTR_INT.num_of_ptr==0){
+            if (t1->t != t2->t) {
+                if (t2->t == T_PTR_INT && t2->d.PTR_INT.num_of_ptr == 0) {
                     printf("[Warning] Conversion from int to ");
                     print_type(t1, env_typename);
                     printf("\n");
-                }
-                else {
+                } else {
                     printf("Error28: Cannot convert from ");
                     print_type(t2, env_typename);
                     printf(" to ");
@@ -1636,6 +1637,7 @@ void ins_cmd(struct cmd * c, struct decl_var *env_typename){
                 }
             }
             break;
+        }
         case T_SEQ:
             ins_cmd(c->d.SEQ.left, env_typename);
             ins_cmd(c->d.SEQ.right, env_typename);
