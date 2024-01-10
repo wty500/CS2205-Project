@@ -851,6 +851,8 @@ struct type * ins_deref(struct type * t) { // 推导出解引用的结果类型
                 struct type * t1 = (struct type *) malloc(sizeof(struct type));
                 t1->t = 1;
                 t1->d.PTR_FUNC.num_of_ptr = t->d.PTR_FUNC.num_of_ptr - 1;
+                t1->d.PTR_FUNC.return_type = t->d.PTR_FUNC.return_type;
+                t1->d.PTR_FUNC.arg_list = t->d.PTR_FUNC.arg_list;
                 return t1;
             }
             else {
@@ -863,6 +865,7 @@ struct type * ins_deref(struct type * t) { // 推导出解引用的结果类型
                 struct type * t1 = (struct type *) malloc(sizeof(struct type));
                 t1->t = 2;
                 t1->d.PTR_PROC.num_of_ptr = t->d.PTR_PROC.num_of_ptr - 1;
+                t1->d.PTR_PROC.arg_list = t->d.PTR_PROC.arg_list;
                 return t1;
             }
             else {
@@ -885,12 +888,15 @@ struct type * ins_addr_of(struct type * t) { // 推导出取地址的结果类�
             struct type *t1 = (struct type *) malloc(sizeof(struct type));
             t1->t = 1;
             t1->d.PTR_FUNC.num_of_ptr = t->d.PTR_FUNC.num_of_ptr + 1;
+            t1->d.PTR_FUNC.return_type = t->d.PTR_FUNC.return_type;
+            t1->d.PTR_FUNC.arg_list = t->d.PTR_FUNC.arg_list;
             return t1;
         }
         case T_PTR_PROC: {
             struct type *t1 = (struct type *) malloc(sizeof(struct type));
             t1->t = 2;
             t1->d.PTR_PROC.num_of_ptr = t->d.PTR_PROC.num_of_ptr + 1;
+            t1->d.PTR_PROC.arg_list = t->d.PTR_PROC.arg_list;
             return t1;
         }
     }
@@ -1243,7 +1249,33 @@ struct decl_var * ins_varname(struct type* t_temp, struct type* t_real, struct t
             for(tnl_it = typenames; tnl_it != NULL; tnl_it = tnl_it->next){
                 if(strcmp(tnl_it->name, t_temp->d.TEMPLATE_TYPE.typename) == 0){
                     if(tnl_it->inst_type==NULL){
-                        tnl_it->inst_type = t_real;
+                        struct type* t1=malloc(sizeof(struct type));
+                        t1->t=t_real->t;
+                        t1->d=t_real->d;
+                        switch (t1->t) {
+                            case T_PTR_INT:
+                                if(t1->d.PTR_INT.num_of_ptr < t_temp->d.TEMPLATE_TYPE.num_of_ptr){
+                                    printf("Error59 when instantiating the type of %s\n", t_temp->d.TEMPLATE_TYPE.typename);
+                                    exit(0);
+                                }
+                                t1->d.PTR_INT.num_of_ptr -= t_temp->d.TEMPLATE_TYPE.num_of_ptr;
+                                break;
+                            case T_PTR_FUNC:
+                                if(t1->d.PTR_FUNC.num_of_ptr < t_temp->d.TEMPLATE_TYPE.num_of_ptr){
+                                    printf("Error60 when instantiating the type of %s\n", t_temp->d.TEMPLATE_TYPE.typename);
+                                    exit(0);
+                                }
+                                t1->d.PTR_FUNC.num_of_ptr -= t_temp->d.TEMPLATE_TYPE.num_of_ptr;
+                                break;
+                            case T_PTR_PROC:
+                                if(t1->d.PTR_PROC.num_of_ptr < t_temp->d.TEMPLATE_TYPE.num_of_ptr){
+                                    printf("Error61 when instantiating the type of %s\n", t_temp->d.TEMPLATE_TYPE.typename);
+                                    exit(0);
+                                }
+                                t1->d.PTR_PROC.num_of_ptr -= t_temp->d.TEMPLATE_TYPE.num_of_ptr;
+                                break;
+                        }
+                        tnl_it->inst_type = t1;
                         flag=1;
                         break;
                     }
@@ -1258,7 +1290,7 @@ struct decl_var * ins_varname(struct type* t_temp, struct type* t_real, struct t
                 exit(0);
             }
             s=malloc(sizeof(struct decl_var));
-            s->var_type = t_real;
+            s->var_type = tnl_it->inst_type;
             s->name = t_temp->d.TEMPLATE_TYPE.typename;
             HASH_ADD_KEYPTR(hh, env_typename, s->name, strlen(s->name), s);
             return env_typename;
@@ -1861,7 +1893,7 @@ void ins_glob_item(struct glob_item *g, struct type_name_list *tnl){
             ins_cmd(g->d.FUNC_DEF.body, NULL);
             return;
         case T_TEMP_FUNC_DEF:
-            printf("Error60: ins_glob_item should not be called in this way\n");
+            printf("Error62: ins_glob_item should not be called in this way\n");
             exit(0);
 //        {
 //            struct decl_var *tns = NULL;
@@ -1900,7 +1932,7 @@ void ins_glob_item(struct glob_item *g, struct type_name_list *tnl){
             ins_cmd(g->d.PROC_DEF.body, NULL);
             return;
         case T_TEMP_PROC_DEF:
-            printf("Error60: ins_glob_item should not be called in this way\n");
+            printf("Error62: ins_glob_item should not be called in this way\n");
             exit(0);
 //        {
 //            struct decl_var *tns1 = NULL;
