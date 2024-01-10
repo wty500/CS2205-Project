@@ -958,10 +958,10 @@ void ins_proc(struct expr_list * es, struct glob_item * proc, struct decl_var * 
             }
         }
         else{
-            struct decl_var *old_var = malloc(sizeof(struct decl_var));
-            old_var->name = it->name;
-            old_var->var_type = t1;
-            HASH_ADD_KEYPTR(hh, env_vars, old_var->name, strlen(old_var->name), old_var);
+            struct decl_var *new_var = malloc(sizeof(struct decl_var));
+            new_var->name = it->name;
+            new_var->var_type = t1;
+            HASH_ADD_KEYPTR(hh, env_vars, new_var->name, strlen(new_var->name), new_var);
             struct var_list *delete_flag = malloc(sizeof(struct decl_var));
             delete_flag->name = it->name;
             delete_flag->cur = NULL;
@@ -1001,6 +1001,9 @@ void ins_proc(struct expr_list * es, struct glob_item * proc, struct decl_var * 
                     flag=1;
                     break;
                 }
+            }
+            if(!flag){
+                break;
             }
         }
     }
@@ -1365,10 +1368,10 @@ struct type * ins_fun(struct expr_list *es, struct glob_item* fun, struct decl_v
             }
         }
         else{
-            struct decl_var *old_var = malloc(sizeof(struct decl_var));
-            old_var->name = it->name;
-            old_var->var_type = t1;
-            HASH_ADD_KEYPTR(hh, env_vars, old_var->name, strlen(old_var->name), old_var);
+            struct decl_var *new_var = malloc(sizeof(struct decl_var));
+            new_var->name = it->name;
+            new_var->var_type = t1;
+            HASH_ADD_KEYPTR(hh, env_vars, new_var->name, strlen(new_var->name), new_var);
             struct var_list *delete_flag = malloc(sizeof(struct decl_var));
             delete_flag->name = it->name;
             delete_flag->cur = NULL;
@@ -1408,6 +1411,9 @@ struct type * ins_fun(struct expr_list *es, struct glob_item* fun, struct decl_v
                     flag=1;
                     break;
                 }
+            }
+            if(!flag){
+                break;
             }
         }
     }

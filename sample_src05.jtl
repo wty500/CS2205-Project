@@ -1,0 +1,23 @@
+template<typename T, typename U, typename V>
+void fun2(T x, U y, V* z){
+  if(x==0) then {return} else {fun2(z*2, x*2, y*2)};
+  fun2(x/2, y/2, z/2)
+};
+
+template<typename T, typename U>
+T fun(T a, U(**b)(U,U**)) {
+  if(a > 0||b < 0)then{return}
+  else{
+    a=fun(a,b-1);
+    fun2(b-1,a+1, b)
+  }
+};
+
+void main(){
+  var int a;
+  a=1;
+  var int*(**b)(int*,int***);
+  b=2;
+  var int c;
+  c=fun(a,b)
+}
