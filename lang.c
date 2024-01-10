@@ -3,9 +3,12 @@
 #include <string.h>
 #include "lang.h"
 
+// 这要求3的难度和码量双双爆炸orz感觉跟前两问相比又上了好几个梯度
+// 当前环境变量/函数/过程声明，使用哈希表存储
 struct decl_var *env_vars=NULL;
 struct decl_fun *env_funs=NULL;
 struct decl_proc *env_procs=NULL;
+// 已经实例化过的函数/过程声明，以防递归函数重复实例化，使用链表存储
 struct instantiated_proc_list *IPL;
 struct instantiated_func_list *IFL;
 
@@ -637,7 +640,7 @@ void print_type(struct type *t, struct decl_var *tns) {
     }
 }
 
-bool cmp_type(struct type * t1, struct type * t2){
+bool cmp_type(struct type * t1, struct type * t2){ // 比较两个类型是否完全相同
     if(t1->t != t2->t){
         return false;
     }
@@ -667,7 +670,7 @@ bool cmp_type_list(struct type_list * tl1, struct type_list * tl2){
     return cmp_type(tl1->data, tl2->data) && cmp_type_list(tl1->next, tl2->next);
 }
 
-bool cmp_type_name_list(struct type_name_list * tnl1, struct type_name_list * tnl2){
+bool cmp_type_name_list(struct type_name_list * tnl1, struct type_name_list * tnl2){ // 比较两个类型名列表是否完全相同（包括类型、顺序和名称）
     if(tnl1 == NULL && tnl2 == NULL){
         return true;
     }
@@ -677,7 +680,7 @@ bool cmp_type_name_list(struct type_name_list * tnl1, struct type_name_list * tn
     return cmp_type(tnl1->inst_type, tnl2->inst_type) && strcmp(tnl1->name, tnl2->name) == 0 && cmp_type_name_list(tnl1->next, tnl2->next);
 }
 
-void _print_type_list(struct type_list *tl) {
+void _print_type_list(struct type_list *tl) { // 多一个逗号
     if (tl == NULL) {
         return;
     }
@@ -756,7 +759,7 @@ void print_expr(struct expr *e) {
     }
 }
 
-struct type * ins_binop(enum BinOpType op, struct type * t1, struct type * t2) {
+struct type * ins_binop(enum BinOpType op, struct type * t1, struct type * t2) { // 根据二元运算符和两个操作数的类型，推导出结果的类型。认为常数可以类型转换
     switch (op) {
         case T_PLUS:
         case T_MINUS:
@@ -816,7 +819,7 @@ struct type * ins_binop(enum BinOpType op, struct type * t1, struct type * t2) {
     }
 }
 
-struct type * ins_unop(enum UnOpType op, struct type * t) {
+struct type * ins_unop(enum UnOpType op, struct type * t) { // 根据一元运算符和操作数的类型，推导出结果的类型。将bool认为是int
     switch (op) {
         case T_UMINUS: {
             struct type *t1 = (struct type *) malloc(sizeof(struct type));
@@ -829,7 +832,7 @@ struct type * ins_unop(enum UnOpType op, struct type * t) {
     }
 }
 
-struct type * ins_deref(struct type * t) {
+struct type * ins_deref(struct type * t) { // 推导出解引用的结果类型
     switch (t->t) {
         case T_PTR_INT:
             if (t->d.PTR_INT.num_of_ptr > 0) {
@@ -870,7 +873,7 @@ struct type * ins_deref(struct type * t) {
     }
 }
 
-struct type * ins_addr_of(struct type * t) {
+struct type * ins_addr_of(struct type * t) { // 推导出取地址的结果类型
     switch (t->t) {
         case T_PTR_INT: {
             struct type *t1 = (struct type *) malloc(sizeof(struct type));
@@ -893,6 +896,11 @@ struct type * ins_addr_of(struct type * t) {
     }
 }
 
+// ins指instantiate，即实例化一个procedure
+// 本函数将遍历procedure的每个实参，推断表达式的类型，并与形参定义的模板类型相比较，以推断出typename是什么
+// 如果存在一个typename未被推导，或者同时被好几个类型不一实参用到，则报错
+// 在推导之后，还需更新环境变量env_vars，覆盖原有大环境的声明（如有）；更新env_typename（使用哈希表存储），然后遍历这个procedure的body，以完成body中含有typename的类型推导
+// 遍历完body后还要回滚
 void ins_proc(struct expr_list * es, struct glob_item * proc, struct decl_var * env_typename) {
     if (es == NULL || proc->t!=T_TEMP_PROC_DEF) {
         return;
@@ -1020,6 +1028,8 @@ void ins_proc(struct expr_list * es, struct glob_item * proc, struct decl_var * 
     }
     return;
 
+
+    // 历史遗留
     // for(struct type_name_list * tnl_it = proc->d.TEMP_PROC_DEF.temp_types; tnl_it != NULL; tnl_it = tnl_it->next) {
     //     bool flag = false; //false表示当前模板还未匹配到类型
     //     struct expr_list * es_1 = es;
@@ -1617,7 +1627,11 @@ void ins_cmd(struct cmd * c, struct decl_var *env_typename){
                     printf("\n");
                 }
                 else {
-                    printf("Error28 when instantiating the type of assignment\n");
+                    printf("Error28: Cannot convert from ");
+                    print_type(t2, env_typename);
+                    printf(" to ");
+                    print_type(t1, env_typename);
+                    printf("\n");
                     exit(0);
                 }
             }
