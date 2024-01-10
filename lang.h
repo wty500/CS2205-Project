@@ -281,10 +281,10 @@ struct type * ins_unop(enum UnOpType op, struct type * t);
 struct type * ins_deref(struct type * t);
 struct type * ins_addr_of(struct type * t);
 void ins_proc(struct expr_list * el, struct glob_item * gi, struct decl_var * dv);
-void ins_varname(struct type* t_temp, struct type* t_real, struct type_name_list * typenames, struct decl_var *env_typename);
+struct decl_var * ins_varname(struct type* t_temp, struct type* t_real, struct type_name_list * typenames, struct decl_var *env_typename);
 struct type_list * ins_return_type_list(struct type_list * tl, struct decl_var * env_typename);
 struct type * ins_return_type(struct type * t, struct decl_var * env_typename);
-void ins_type_list(struct type_list * tl_temp, struct type_list * tl_real, struct type_name_list * typenames, struct decl_var *env_typename);
+struct decl_var *  ins_type_list(struct type_list * tl_temp, struct type_list * tl_real, struct type_name_list * typenames, struct decl_var *env_typename);
 struct type * ins_expr(struct expr *e, struct decl_var *env_typename);
 struct type * ins_fun(struct expr_list *es, struct glob_item* fun, struct decl_var *env_typename);
 

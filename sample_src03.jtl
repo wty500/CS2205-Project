@@ -2,15 +2,16 @@ template<typename T, typename U>
 T fun(T a, U b) {
   if(a==0||b==0)then{return}
   else{
-    fun(a,b-1);
-    fun(b,a-1)
+    a=fun(a,b-1);
+    b=fun(b,a-1)
   }
 };
 
-int main(void(*a)(), int*(**b)(int*,int*)){
+void main(void(*a)(), int*(**b)(int*,int*)){
   var int a;
-  a=read_int();
+  a=1;
   var int b;
-  b=read_int();
-  fun(a,b)
+  b=2;
+  var int c;
+  c=fun(a,b)
 }

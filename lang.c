@@ -922,7 +922,7 @@ void ins_proc(struct expr_list * es, struct glob_item * proc, struct decl_var * 
             exit(0);
         }
         struct type * t1 = ins_expr(es_1->data, env_typename);
-        ins_varname(it->cur, t1, head, new_env_typename);
+        new_env_typename = ins_varname(it->cur, t1, head, new_env_typename);
         struct decl_var *s;
         HASH_FIND_STR(env_vars, it->name , s);
         if(s){
@@ -1189,13 +1189,13 @@ void print_expr_list(struct expr_list *es) {
     print_expr_list(es->next);
 }
 
-void ins_varname(struct type* t_temp, struct type* t_real, struct type_name_list * typenames, struct decl_var *env_typename){
+struct decl_var * ins_varname(struct type* t_temp, struct type* t_real, struct type_name_list * typenames, struct decl_var *env_typename){
     if(t_temp->t==T_TEMPLATE_TYPE){
         struct decl_var *s;
         HASH_FIND_STR(env_typename, t_temp->d.TEMPLATE_TYPE.typename, s);
         if(s){
             if(cmp_type(s->var_type, t_real)){
-                return;
+                return env_typename;
             }
             else{
                 printf("Error50 when instantiating the type of %s\n", t_temp->d.TEMPLATE_TYPE.typename);
@@ -1226,7 +1226,7 @@ void ins_varname(struct type* t_temp, struct type* t_real, struct type_name_list
             s->var_type = t_real;
             s->name = t_temp->d.TEMPLATE_TYPE.typename;
             HASH_ADD_KEYPTR(hh, env_typename, s->name, strlen(s->name), s);
-            return;
+            return env_typename;
         }
     }
     else if(t_temp->t!=t_real->t){
@@ -1246,31 +1246,32 @@ void ins_varname(struct type* t_temp, struct type* t_real, struct type_name_list
                     printf("Error54 when instantiating the type of %s\n", t_temp->d.TEMPLATE_TYPE.typename);
                     exit(0);
                 }
-                ins_varname(t_temp->d.PTR_FUNC.return_type, t_real->d.PTR_FUNC.return_type, typenames, env_typename);
-                ins_type_list(t_temp->d.PTR_FUNC.arg_list, t_real->d.PTR_FUNC.arg_list, typenames, env_typename);
+                env_typename = ins_varname(t_temp->d.PTR_FUNC.return_type, t_real->d.PTR_FUNC.return_type, typenames, env_typename);
+                env_typename = ins_type_list(t_temp->d.PTR_FUNC.arg_list, t_real->d.PTR_FUNC.arg_list, typenames, env_typename);
                 break;
             case T_PTR_PROC:
                 if(t_temp->d.PTR_PROC.num_of_ptr != t_real->d.PTR_PROC.num_of_ptr){
                     printf("Error55 when instantiating the type of %s\n", t_temp->d.TEMPLATE_TYPE.typename);
                     exit(0);
                 }
-                ins_type_list(t_temp->d.PTR_PROC.arg_list, t_real->d.PTR_PROC.arg_list, typenames, env_typename);
+                env_typename = ins_type_list(t_temp->d.PTR_PROC.arg_list, t_real->d.PTR_PROC.arg_list, typenames, env_typename);
                 break;
         }
 
     }
+    return env_typename;
 }
 
-void ins_type_list(struct type_list * tl_temp, struct type_list * tl_real, struct type_name_list * typenames, struct decl_var *env_typename){
+struct decl_var * ins_type_list(struct type_list * tl_temp, struct type_list * tl_real, struct type_name_list * typenames, struct decl_var *env_typename){
     if(tl_temp == NULL && tl_real == NULL){
-        return;
+        return env_typename;
     }
     if(tl_temp == NULL || tl_real == NULL){
         printf("Error56 when instantiating the type of %s\n", tl_temp->data->d.TEMPLATE_TYPE.typename);
         exit(0);
     }
-    ins_varname(tl_temp->data, tl_real->data, typenames, env_typename);
-    ins_type_list(tl_temp->next, tl_real->next, typenames, env_typename);
+    env_typename = ins_varname(tl_temp->data, tl_real->data, typenames, env_typename);
+    return ins_type_list(tl_temp->next, tl_real->next, typenames, env_typename);
 }
 
 struct type * ins_fun(struct expr_list *es, struct glob_item* fun, struct decl_var *env_typename){
@@ -1302,7 +1303,7 @@ struct type * ins_fun(struct expr_list *es, struct glob_item* fun, struct decl_v
             exit(0);
         }
         struct type * t1 = ins_expr(es_1->data, env_typename);
-        ins_varname(it->cur, t1, head, new_env_typename);
+        new_env_typename = ins_varname(it->cur, t1, head, new_env_typename);
         struct decl_var *s;
         HASH_FIND_STR(env_vars, it->name , s);
         if(s){
@@ -1379,9 +1380,10 @@ struct type * ins_fun(struct expr_list *es, struct glob_item* fun, struct decl_v
     struct instantiated_func * new_func = malloc(sizeof(struct instantiated_func));
     new_func->name = fun->d.TEMP_FUNC_DEF.name;
     new_func->args = head;
-    new_func->return_type = ins_return_type(fun->d.TEMP_FUNC_DEF.return_type, env_typename);
+    new_func->return_type = ins_return_type(fun->d.TEMP_FUNC_DEF.return_type, new_env_typename);
     if(flag) {
         struct instantiated_func_list *ifl = malloc(sizeof(struct instantiated_func_list));
+        ifl->data = new_func;
         ifl->next = IFL;
         IFL = ifl;
         ins_cmd(fun->d.TEMP_FUNC_DEF.body, new_env_typename);
