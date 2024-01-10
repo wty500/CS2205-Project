@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "lib.h"
-#include "uthash.h"
+#include "uthash.h" // uthash.h is a header file from uthash library
 
 struct decl_var {
     const char *name;          /* key */
@@ -83,9 +83,9 @@ enum GlobItemType {
 
 enum TypeType {
     T_PTR_INT,
-    T_PTR_FUNC,
-    T_PTR_PROC,
-    T_TEMPLATE_TYPE
+    T_PTR_FUNC, // 函数指针
+    T_PTR_PROC, // 过程指针
+    T_TEMPLATE_TYPE // 未实例化过的模板类型，如T
 };
 
 struct type;
@@ -96,7 +96,7 @@ struct type_list {
 };
 
 struct type {
-    enum TypeType t; // 0: int, 1: func, 2: proc
+    enum TypeType t; // 0: int, 1: func, 2: proc, 3: template type
     union {
       struct {unsigned int num_of_ptr; } PTR_INT;
       struct {struct type * return_type; unsigned int num_of_ptr; struct type_list * arg_list; } PTR_FUNC;

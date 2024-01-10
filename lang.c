@@ -1061,6 +1061,7 @@ void ins_proc(struct expr_list * es, struct glob_item * proc, struct decl_var * 
 
 }
 
+// 实例化一个形参列表，在ins_return_type实例化函数指针时需要用到
 struct type_list * ins_return_type_list(struct type_list * tl, struct decl_var * env_typename) {
     if (tl == NULL) {
         return NULL;
@@ -1082,6 +1083,7 @@ struct type_list * ins_return_type_list(struct type_list * tl, struct decl_var *
     return head;
 }
 
+// 实例化单个包含了typename的类型
 struct type * ins_return_type(struct type * t, struct decl_var * env_typename) {
     switch (t->t) {
         case T_PTR_INT:
@@ -1120,6 +1122,7 @@ struct type * ins_return_type(struct type * t, struct decl_var * env_typename) {
     }
 }
 
+// 推断一个表达式结果的真正类型，实现方式类似解释器
 struct type * ins_expr(struct expr *e, struct decl_var *env_typename){
     switch (e->t) {
         case T_CONST:
@@ -1149,6 +1152,7 @@ struct type * ins_expr(struct expr *e, struct decl_var *env_typename){
             HASH_FIND_STR(env_funs, e->d.FUNC.name, f);
             if (f) {
                   return ins_fun(e->d.FUNC.args, f->it, env_typename);
+                  // 历史遗留，已经都挪到ins_fun里面去了
 //                struct type_name_list *inst_args = ins_fun(e->d.FUNC.args, f->it, env_typename);
 //                struct instantiated_func_list *list_it;
 //                for (list_it = IFL; list_it != NULL && list_it->data!=NULL; list_it = list_it->next) {
@@ -1201,6 +1205,8 @@ void print_expr_list(struct expr_list *es) {
     print_expr_list(es->next);
 }
 
+// 对照着t_real，把t_temp里面的所有typename都推断出来，并且更新env_typename
+// 如果t_temp里面有typename没有被推断出来，或者与先前被推断出来的类型不一致，则报错
 struct decl_var * ins_varname(struct type* t_temp, struct type* t_real, struct type_name_list * typenames, struct decl_var *env_typename){
     if(t_temp->t==T_TEMPLATE_TYPE){
         struct decl_var *s;
@@ -1288,6 +1294,7 @@ struct decl_var * ins_varname(struct type* t_temp, struct type* t_real, struct t
     return env_typename;
 }
 
+// 对整个形参列表都对照着实参（表达式结果）推断一遍typename。
 struct decl_var * ins_type_list(struct type_list * tl_temp, struct type_list * tl_real, struct type_name_list * typenames, struct decl_var *env_typename){
     if(tl_temp == NULL && tl_real == NULL){
         return env_typename;
@@ -1300,6 +1307,7 @@ struct decl_var * ins_type_list(struct type_list * tl_temp, struct type_list * t
     return ins_type_list(tl_temp->next, tl_real->next, typenames, env_typename);
 }
 
+// 与实例化procedure类似，返回值为函数的返回值类型
 struct type * ins_fun(struct expr_list *es, struct glob_item* fun, struct decl_var *env_typename){
     if(es == NULL||fun->t==T_FUNC_DEF){
         return fun->d.FUNC_DEF.return_type;
@@ -1428,6 +1436,7 @@ struct type * ins_fun(struct expr_list *es, struct glob_item* fun, struct decl_v
     }
     return new_func->return_type;
 
+    // 历史遗留
     // for(struct type_name_list * tnl_it = fun->d.TEMP_FUNC_DEF.temp_types; tnl_it != NULL; tnl_it = tnl_it->next) {
     //     bool flag = false; //false表示当前模板还未匹配到类型
     //     struct expr_list * es_1 = es;
@@ -1588,6 +1597,7 @@ void print_cmd(struct cmd *c, struct decl_var *tns) {
     }
 }
 
+// 实例化函数体
 void ins_cmd(struct cmd * c, struct decl_var *env_typename){
     switch (c->t) {
         case T_DECL: {
@@ -1838,6 +1848,7 @@ void print_glob_item(struct glob_item *g) {
     }
 }
 
+// 实例化函数体。现在应该是可以直接调用ins_fun和ins_proc了，只有main函数要用到这个
 void ins_glob_item(struct glob_item *g, struct type_name_list *tnl){
     switch(g->t){
         case T_FUNC_DEF:
