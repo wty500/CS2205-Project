@@ -1194,7 +1194,21 @@ struct decl_var * ins_varname(struct type* t_temp, struct type* t_real, struct t
         struct decl_var *s;
         HASH_FIND_STR(env_typename, t_temp->d.TEMPLATE_TYPE.typename, s);
         if(s){
-            if(cmp_type(s->var_type, t_real)){
+            struct type* t1=malloc(sizeof(struct type));
+            t1->t=s->var_type->t;
+            t1->d=s->var_type->d;
+            switch(t1->t){
+                case T_PTR_INT:
+                    t1->d.PTR_INT.num_of_ptr += t_temp->d.TEMPLATE_TYPE.num_of_ptr;
+                    break;
+                case T_PTR_FUNC:
+                    t1->d.PTR_FUNC.num_of_ptr += t_temp->d.TEMPLATE_TYPE.num_of_ptr;
+                    break;
+                case T_PTR_PROC:
+                    t1->d.PTR_PROC.num_of_ptr += t_temp->d.TEMPLATE_TYPE.num_of_ptr;
+                    break;
+            }
+            if(cmp_type(t1, t_real)){
                 return env_typename;
             }
             else{
@@ -1361,7 +1375,7 @@ struct type * ins_fun(struct expr_list *es, struct glob_item* fun, struct decl_v
     }
     for(struct type_name_list * tnl_it = head; tnl_it != NULL; tnl_it = tnl_it->next){
         if(tnl_it->inst_type == NULL){
-            printf("Error58 when instantiating the type of %s\n", fun->d.TEMP_FUNC_DEF.name);
+            printf("Error58 when instantiating the type of %s: unused typename %s\n", fun->d.TEMP_FUNC_DEF.name, tnl_it->name);
             exit(0);
         }
     }

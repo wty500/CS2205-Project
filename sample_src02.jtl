@@ -7,7 +7,7 @@ T fun(int(*a)(T), U b) {
 };
 
 void main() {
-  var int m;
+  var int(*m)(int);
   var int n;
   var int k;
   k = fun(m, n)
