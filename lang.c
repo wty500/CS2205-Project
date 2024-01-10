@@ -1608,9 +1608,18 @@ void ins_cmd(struct cmd * c, struct decl_var *env_typename){
         }
             break;
         case T_ASGN:
-            if(ins_expr(c->d.ASGN.left, env_typename)->t!=ins_expr(c->d.ASGN.right, env_typename)->t){
-                printf("Error28 when instantiating the type of assignment\n");
-                exit(0);
+            struct type *t1 = ins_expr(c->d.ASGN.left, env_typename);
+            struct type *t2 = ins_expr(c->d.ASGN.right, env_typename);
+            if(t1->t!=t2->t){
+                if(t2->t==T_PTR_INT&&t2->d.PTR_INT.num_of_ptr==0){
+                    printf("[Warning] Conversion from int to ");
+                    print_type(t1, env_typename);
+                    printf("\n");
+                }
+                else {
+                    printf("Error28 when instantiating the type of assignment\n");
+                    exit(0);
+                }
             }
             break;
         case T_SEQ:
@@ -1918,7 +1927,7 @@ void ins_glob_item_list(struct glob_item_list *gs) {
     }
     struct decl_fun *f;
     for (f = env_funs; f != NULL; f= f->hh.next) {
-        printf("fun name: %s\n", f->name);
+        printf("func name: %s\n", f->name);
     }
     HASH_FIND_STR(env_procs, "main", p);
     if (p == NULL) {
