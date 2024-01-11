@@ -280,25 +280,25 @@ struct type * ins_binop(enum BinOpType op, struct type * t1, struct type * t2);
 struct type * ins_unop(enum UnOpType op, struct type * t);
 struct type * ins_deref(struct type * t);
 struct type * ins_addr_of(struct type * t);
-void ins_proc(struct expr_list * el, struct glob_item * gi, struct decl_var * dv);
 struct decl_var * ins_varname(struct type* t_temp, struct type* t_real, struct type_name_list * typenames, struct decl_var *env_typename);
 struct type_list * ins_return_type_list(struct type_list * tl, struct decl_var * env_typename);
 struct type * ins_return_type(struct type * t, struct decl_var * env_typename);
 struct decl_var *  ins_type_list(struct type_list * tl_temp, struct type_list * tl_real, struct type_name_list * typenames, struct decl_var *env_typename);
 struct type * ins_expr(struct expr *e, struct decl_var *env_typename);
+void ins_cmd(struct cmd * c, struct decl_var *env_typename);
+void ins_proc(struct expr_list * el, struct glob_item * gi, struct decl_var * dv);
 struct type * ins_fun(struct expr_list *es, struct glob_item* fun, struct decl_var *env_typename);
+void ins_glob_item(struct glob_item *g, struct type_name_list *tnl);
+void ins_glob_item_list(struct glob_item_list *gs);
 
 void print_binop(enum BinOpType op);
 void print_unop(enum UnOpType op);
 void print_expr(struct expr * e);
 void print_expr_list(struct expr_list * es);
 void print_cmd(struct cmd *c, struct decl_var *tns);
-void ins_cmd(struct cmd * c, struct decl_var *env_typename);
 void print_var_list(struct var_list * vs, struct decl_var *tns);
 // void print_temp_var_list(struct temp_var_list * vs);
 void print_glob_item(struct glob_item * g);
-void ins_glob_item(struct glob_item *g, struct type_name_list *tnl);
 void print_glob_item_list(struct glob_item_list * gs);
-void ins_glob_item_list(struct glob_item_list *gs);
 
 #endif // LANG_H_INCLUDED
