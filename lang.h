@@ -108,7 +108,7 @@ struct type {
 struct ptr_num {
     unsigned int num_ptr;
 };
-
+#define max_ptr 1000
 
 struct expr;
 
@@ -273,7 +273,6 @@ bool cmp_type(struct type * t1, struct type * t2);
 void print_type_list(struct type_list * tl);
 bool cmp_type_list(struct type_list * tl1, struct type_list * tl2);
 void print_type_name_list(struct type_name_list * tnl);
-
 
 bool cmp_type_name_list(struct type_name_list * tnl1, struct type_name_list * tnl2);
 struct type * ins_binop(enum BinOpType op, struct type * t1, struct type * t2);

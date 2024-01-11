@@ -882,6 +882,10 @@ struct type * ins_addr_of(struct type * t) { // 推导出取地址的结果类�
             struct type *t1 = (struct type *) malloc(sizeof(struct type));
             t1->t = 0;
             t1->d.PTR_INT.num_of_ptr = t->d.PTR_INT.num_of_ptr + 1;
+            if(t1->d.PTR_INT.num_of_ptr > max_ptr){
+                printf("Error44: Cannot unfold finite pointer type\n");
+                exit(0);
+            }
             return t1;
         }
         case T_PTR_FUNC: {
@@ -890,6 +894,10 @@ struct type * ins_addr_of(struct type * t) { // 推导出取地址的结果类�
             t1->d.PTR_FUNC.num_of_ptr = t->d.PTR_FUNC.num_of_ptr + 1;
             t1->d.PTR_FUNC.return_type = t->d.PTR_FUNC.return_type;
             t1->d.PTR_FUNC.arg_list = t->d.PTR_FUNC.arg_list;
+            if(t1->d.PTR_FUNC.num_of_ptr > max_ptr){
+                printf("Error44: Cannot unfold finite pointer type\n");
+                exit(0);
+            }
             return t1;
         }
         case T_PTR_PROC: {
@@ -897,6 +905,10 @@ struct type * ins_addr_of(struct type * t) { // 推导出取地址的结果类�
             t1->t = 2;
             t1->d.PTR_PROC.num_of_ptr = t->d.PTR_PROC.num_of_ptr + 1;
             t1->d.PTR_PROC.arg_list = t->d.PTR_PROC.arg_list;
+            if(t1->d.PTR_PROC.num_of_ptr > max_ptr){
+                printf("Error44: Cannot unfold finite pointer type\n");
+                exit(0);
+            }
             return t1;
         }
     }
