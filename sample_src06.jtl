@@ -1,0 +1,11 @@
+template<typename T>
+void f(T x)
+{
+    f(&x)
+};
+
+void main() {
+  var int n;
+  var int k;
+  f(n)
+}

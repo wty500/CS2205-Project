@@ -1,0 +1,14 @@
+template<typename T, typename U>
+T fun(T a, U b) {
+  var int(**n)(U, T**);
+  var void(*x)();
+  var T m;
+  m = m + 1
+};
+
+void main() {
+  var int(*m)(int);
+  var int n;
+  var int k;
+  k = fun(m, n)
+}
