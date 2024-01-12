@@ -108,7 +108,6 @@ struct type {
 struct ptr_num {
     unsigned int num_ptr;
 };
-#define max_ptr 1000
 
 struct expr;
 

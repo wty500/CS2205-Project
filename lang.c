@@ -3,6 +3,14 @@
 #include <string.h>
 #include "lang.h"
 
+#define max_ptr 1000 // 限制指针的最大数量，防止无限展开，可调整
+//#define ins_depth_limit
+
+#ifdef ins_depth_limit
+int ins_depth = 0;
+int max_ins_depth = 3000; // 限制实例化的最大深度，防止无限展开，可调整
+#endif
+
 // 这要求3的难度和码量双双爆炸orz感觉跟前两问相比又上了好几个梯度
 // 当前环境变量/函数/过程声明，使用哈希表存储
 struct decl_var *env_vars=NULL;
@@ -882,10 +890,12 @@ struct type * ins_addr_of(struct type * t) { // 推导出取地址的结果类�
             struct type *t1 = (struct type *) malloc(sizeof(struct type));
             t1->t = 0;
             t1->d.PTR_INT.num_of_ptr = t->d.PTR_INT.num_of_ptr + 1;
+#ifdef max_ptr
             if(t1->d.PTR_INT.num_of_ptr > max_ptr){
                 printf("Error44: Cannot unfold finite pointer type\n");
                 exit(0);
             }
+#endif
             return t1;
         }
         case T_PTR_FUNC: {
@@ -894,10 +904,12 @@ struct type * ins_addr_of(struct type * t) { // 推导出取地址的结果类�
             t1->d.PTR_FUNC.num_of_ptr = t->d.PTR_FUNC.num_of_ptr + 1;
             t1->d.PTR_FUNC.return_type = t->d.PTR_FUNC.return_type;
             t1->d.PTR_FUNC.arg_list = t->d.PTR_FUNC.arg_list;
+#ifdef max_ptr
             if(t1->d.PTR_FUNC.num_of_ptr > max_ptr){
                 printf("Error44: Cannot unfold finite pointer type\n");
                 exit(0);
             }
+#endif
             return t1;
         }
         case T_PTR_PROC: {
@@ -905,10 +917,12 @@ struct type * ins_addr_of(struct type * t) { // 推导出取地址的结果类�
             t1->t = 2;
             t1->d.PTR_PROC.num_of_ptr = t->d.PTR_PROC.num_of_ptr + 1;
             t1->d.PTR_PROC.arg_list = t->d.PTR_PROC.arg_list;
+#ifdef max_ptr
             if(t1->d.PTR_PROC.num_of_ptr > max_ptr){
                 printf("Error44: Cannot unfold finite pointer type\n");
                 exit(0);
             }
+#endif
             return t1;
         }
     }
@@ -924,6 +938,13 @@ void ins_proc(struct expr_list * es, struct glob_item * proc, struct decl_var * 
     if (es == NULL || proc->t!=T_TEMP_PROC_DEF) {
         return;
     }
+#ifdef ins_depth_limit
+    ins_depth++;
+    if(ins_depth > max_ins_depth){
+        printf("Error45: Cannot unfold finite type\n");
+        exit(0);
+    }
+#endif
     struct type_name_list * head = NULL, *tail = head;
     for(struct type_name_list * tnl_it = proc->d.TEMP_PROC_DEF.temp_types; tnl_it != NULL; tnl_it = tnl_it->next){
         struct type_name_list * temp = malloc(sizeof(struct type_name_list));
@@ -1048,6 +1069,9 @@ void ins_proc(struct expr_list * es, struct glob_item * proc, struct decl_var * 
             s->var_type = it->cur;
         }
     }
+#ifdef ins_depth_limit
+    ins_depth--;
+#endif
     return;
 
 
@@ -1360,6 +1384,13 @@ struct type * ins_fun(struct expr_list *es, struct glob_item* fun, struct decl_v
     if(es == NULL||fun->t==T_FUNC_DEF){
         return fun->d.FUNC_DEF.return_type;
     }
+#ifdef max_ins_depth
+    ins_depth++;
+    if(ins_depth > max_ins_depth){
+        printf("Error62: Cannot unfold finite pointer type\n");
+        exit(0);
+    }
+#endif
     struct type_name_list * head = NULL, * tail = head;
     for(struct type_name_list * tnl_it = fun->d.TEMP_FUNC_DEF.temp_types; tnl_it != NULL; tnl_it = tnl_it->next){
         struct type_name_list * temp = malloc(sizeof(struct type_name_list));
@@ -1485,6 +1516,9 @@ struct type * ins_fun(struct expr_list *es, struct glob_item* fun, struct decl_v
             s->var_type = it->cur;
         }
     }
+#ifdef max_ins_depth
+    ins_depth--;
+#endif
     return new_func->return_type;
 
     // 历史遗留
